@@ -1,7 +1,7 @@
 // بيخزّن ملفات التطبيق عشان يشتغل من غير نت
 const CACHE = 'egy-bac-study-v1';
 const FILES = ['./', './index.html', './style.css', './app.js', './manifest.webmanifest',
-  './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png'];
+  './icons/icon.svg'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
 });
