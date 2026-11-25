@@ -1,3 +1,4 @@
+// © 2026 Medhat Saaed. All rights reserved.
 'use strict';
 // ===== البيانات (المواد حسب قرارات وزارة التربية والتعليم) =====
 var DAYS = [{ id: 6, n: 'السبت' }, { id: 0, n: 'الأحد' }, { id: 1, n: 'الاتنين' }, { id: 2, n: 'التلات' }, { id: 3, n: 'الأربع' }, { id: 4, n: 'الخميس' }, { id: 5, n: 'الجمعة' }];
@@ -13,7 +14,7 @@ var FOCUS = [25, 45, 60];
 
 // ===== الحفظ على الموبايل =====
 var KEY = 'egy-bac-study.v1';
-var S = { profile: { grade: '', track: '', elective: '', custom: [] }, tasks: [], exams: [], mins: {} };
+var S = { profile: { grade: '', track: '', elective: '', electives: {}, custom: [] }, tasks: [], exams: [], mins: {} };
 try { var saved = JSON.parse(localStorage.getItem(KEY)); if (saved) { for (var k in S) if (saved[k] !== undefined) S[k] = saved[k]; } } catch (e) {}
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
@@ -114,6 +115,7 @@ function render() {
     h += '<h2>موادك</h2><p>' + esc(subs.join('، ')) + '</p>';
   }
   h += '<p class="offline">بيشتغل من غير نت وبياناتك على موبايلك بس.</p>';
+  h += '<p class="offline">تطوير: Medhat Saaed · © ٢٠٢٦ جميع الحقوق محفوظة</p>';
   var y = window.scrollY; app.innerHTML = h; window.scrollTo(0, y);
 }
 
@@ -136,10 +138,10 @@ document.addEventListener('input', function (e) {
 document.addEventListener('click', function (e) {
   var b = e.target.closest('[data-a]'); if (!b) return;
   var a = b.dataset.a, v = b.dataset.v, s = U.setup;
-  if (a === 'sg') { s.grade = v; s.elective = ''; if (v === '1') s.track = ''; }
-  else if (a === 'st') { s.track = v; s.elective = ''; }
-  else if (a === 'se') s.elective = v;
-  else if (a === 'start') { if (setupReady(s)) { S.profile = { grade: s.grade, track: s.track, elective: s.elective, custom: S.profile.custom || [] }; U.editing = false; save(); } }
+  if (a === 'sg') { if (s.grade !== v) { s.grade = v; if (v === '1') s.track = ''; s.elective = (S.profile.electives || {})[s.track] || ''; } }
+  else if (a === 'st') { if (s.track !== v) { s.track = v; s.elective = (S.profile.electives || {})[v] || ''; } }
+  else if (a === 'se') { s.elective = v; S.profile.electives = S.profile.electives || {}; S.profile.electives[s.track] = v; save(); }
+  else if (a === 'start') { if (setupReady(s)) { S.profile = { grade: s.grade, track: s.track, elective: s.elective, electives: S.profile.electives || {}, custom: S.profile.custom || [] }; U.editing = false; save(); } }
   else if (a === 'edit') { U.setup = { grade: S.profile.grade, track: S.profile.track, elective: S.profile.elective }; U.editing = true; }
   else if (a === 'tab') U.tab = v;
   else if (a === 'pd') U.day = v;
