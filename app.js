@@ -83,7 +83,7 @@ function viewTimer() {
     chips('fl', FOCUS.map(function (m) { return [String(m), ar(m) + ' دقيقة']; }), String(T.len)) + '<div class="actions">' +
     (T.running ? '<button class="btn sec" type="button" data-a="pause">وقف مؤقت</button>' : '<button class="btn" type="button" data-a="start-t">' + (T.left < T.len * 60 && T.left > 0 ? 'كمّل' : 'ابدأ') + '</button>') +
     '<button class="btn ghost" type="button" data-a="reset">من الأول</button></div>';
-  if (T.finished) h += '<p class="done-msg"><b>برافو، خلصت الجلسة</b><br>اتسجلت لك ' + ar(T.len) + ' دقيقة. خد راحة خمس دقايق وقوم اتحرك.</p>';
+  if (T.finished) h += '<div class="callout"><b>برافو، خلصت الجلسة</b><br>اتسجلت لك ' + ar(T.len) + ' دقيقة. خد راحة خمس دقايق وقوم اتحرك.</div>';
   h += '<p class="note">سيب الصفحة مفتوحة وإنت بتذاكر. الوقت بيتسجل لما الجلسة تخلص بس.</p><h2>مذاكرتك</h2>' +
     '<div class="stat"><span>النهارده</span><b>' + ar(today) + ' دقيقة</b></div><div class="stat"><span>آخر ٧ أيام</span><b>' + ar(week) + ' دقيقة</b></div>';
   return h;
@@ -111,7 +111,7 @@ function render() {
     h += '<div class="profile"><div><b>' + gl + '</b><span>' + (t ? t.l : 'سنة تمهيدية') + '</span></div><button class="btn ghost" type="button" data-a="edit" style="margin:0">غيّر الصف أو المسار</button></div>';
     h += chips('tab', [['plan', 'الجدول'], ['timer', 'التركيز'], ['exams', 'الامتحانات الشاملة']], U.tab);
     h += U.tab === 'plan' ? viewPlan(subs) : U.tab === 'timer' ? viewTimer() : viewExams(subs);
-    h += '<h2>موادك</h2><p>' + esc(subs.join('، ')) + '</p><div class="label">ناقص مادة؟ اكتب اسمها</div><input type="text" id="extra" value="' + esc(U.extra) + '"><button class="btn sec" type="button" data-a="sadd">ضيف المادة</button>';
+    h += '<h2>موادك</h2><p>' + esc(subs.join('، ')) + '</p>';
   }
   h += '<p class="offline">بيشتغل من غير نت وبياناتك على موبايلك بس.</p>';
   var y = window.scrollY; app.innerHTML = h; window.scrollTo(0, y);
