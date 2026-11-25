@@ -14,13 +14,35 @@ var FOCUS = [25, 45, 60];
 
 // ===== الحفظ على الموبايل =====
 var KEY = 'egy-bac-study.v1';
-var S = { settings: { study: { on: false, t: '17:00' }, exam: { on: true }, focus: { on: true }, usage: { on: false, h: 4 } }, sess: {}, profile: { grade: '', track: '', elective: '', electives: {}, custom: [] }, tasks: [], exams: [], mins: {} };
+var S = { settings: { study: { on: false, t: '17:00' }, exam: { on: true }, focus: { on: true }, usage: { on: false, h: 4 }, dnd: { on: false }, alarm: { on: true } }, sess: {}, profile: { grade: '', track: '', elective: '', electives: {}, custom: [] }, tasks: [], exams: [], mins: {} };
 try { var saved = JSON.parse(localStorage.getItem(KEY)); if (saved) { for (var k in S) if (saved[k] !== undefined) S[k] = saved[k]; } } catch (e) {}
+S.settings = S.settings || {}; ['study', 'exam', 'focus', 'usage', 'dnd', 'alarm'].forEach(function (k) { if (!S.settings[k]) S.settings[k] = { study: { on: false, t: '17:00' }, exam: { on: true }, focus: { on: true }, usage: { on: false, h: 4 }, dnd: { on: false }, alarm: { on: true } }[k]; });
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} syncAndroid(); }
-function syncAndroid() { try { if (window.Android && Android.sync) Android.sync(JSON.stringify({ settings: S.settings, exams: S.exams })); } catch (e) {} }
+function syncAndroid() {
+  try { if (window.Android && Android.sync) Android.sync(JSON.stringify({ settings: S.settings, exams: S.exams })); else swPost({ type: 'cfg', cfg: { settings: S.settings, exams: S.exams } }); } catch (e) {}
+}
+function swPost(msg) { try { if (!('serviceWorker' in navigator)) return; navigator.serviceWorker.ready.then(function (r) { if (r.active) r.active.postMessage(msg); }).catch(function () {}); } catch (e) {} }
+function webNotifOk() { return !window.Android && 'Notification' in window && Notification.permission === 'granted'; }
+function notify(title, body, tag) {
+  if (!webNotifOk()) return;
+  var opt = { body: body, tag: tag || 'mz', lang: 'ar', dir: 'rtl', vibrate: [200, 100, 200], data: { url: './' } };
+  var fallback = function () { try { new Notification(title, { body: body, lang: 'ar', dir: 'rtl' }); } catch (e) {} };
+  try {
+    if ('serviceWorker' in navigator) navigator.serviceWorker.ready.then(function (r) { return r.showNotification(title, opt); }).catch(fallback); else fallback();
+  } catch (e) { fallback(); }
+}
+function askPerm() {
+  if (window.Android || !('Notification' in window) || Notification.permission !== 'default') return;
+  try {
+    var p = Notification.requestPermission(function () {});
+    var done = function () { syncAndroid(); regPeriodic(); render(); };
+    if (p && p.then) p.then(done); else done();
+  } catch (e) {}
+}
+function regPeriodic() { try { navigator.serviceWorker.ready.then(function (r) { if (r.periodicSync) r.periodicSync.register('mz-check', { minInterval: 6 * 3600 * 1000 }).catch(function () {}); }); } catch (e) {} }
 
 // ===== حالة مؤقتة (مش بتتحفظ) =====
-var U = { tab: 'home', anim: '', editing: false, setup: { grade: '', track: '', elective: '' }, day: String(new Date().getDay()), subj: '', dur: '60', exSubj: '', exDate: '', extra: '' };
+var U = { tab: 'home', anim: '', editing: false, setup: { grade: '', track: '', elective: '' }, day: String(new Date().getDay()), subj: '', dur: '60', exSubj: '', exDate: '', extra: '', msg: '' };
 var T = { mode: 'focus', blen: 5, len: 25, left: 25 * 60, running: false, end: 0, finished: false, id: null };
 
 // ===== أدوات =====
@@ -132,14 +154,23 @@ function sw(name, on) { return '<button type="button" class="sw" role="switch" d
 function viewSettings() {
   var st = S.settings, A = window.Android, ok = !!(A && A.sync), n = ok && A.notifOk && A.notifOk(), u = ok && A.usageOk && A.usageOk();
   var h = '<section class="card lift"><h2>الأذونات</h2>';
-  if (!ok) h += '<p class="note">الأذونات والتنبيهات بتشتغل في تطبيق الأندرويد بس. هنا تقدر تظبط الإعدادات وتتحفظ.</p>';
+  if (!ok) {
+    var perm = ('Notification' in window) ? Notification.permission : 'unsupported';
+    if (perm === 'unsupported') h += '<div class="callout">المتصفح ده مش بيدعم التنبيهات. افتح الموقع في Chrome على الأندرويد (وثبّته من «إضافة إلى الشاشة الرئيسية»)، أو استخدم تطبيق الـAPK.</div>';
+    else if (perm === 'default') h += '<div class="row"><div class="grow"><b>التنبيهات</b><small>لازم تسمح للمتصفح يبعتلك تنبيهات</small></div><button class="btn perm" type="button" data-a="askn">فعّل التنبيهات</button></div>';
+    else if (perm === 'granted') h += '<div class="row"><div class="grow"><b>التنبيهات</b><small>شغالة على الموقع ده</small></div><span class="okb">تمام ✓</span></div>';
+    else h += '<div class="callout"><b>التنبيهات مقفولة.</b><br>دوس على أيقونة القفل أو النقط التلاتة جنب رابط الموقع، بعدين «إعدادات الموقع» أو «الأذونات»، واختار «الإشعارات» وغيّرها لـ«السماح». وبعدين ارجع هنا وحدّث الصفحة. لو مثبّت التطبيق: إعدادات الموبايل > التطبيقات > مذاكرتي > الإشعارات.</div>';
+    h += '<p class="note">التنبيهات بتوصل وإنت فاتح التطبيق أو سايبه في الخلفية. لو قفلته خالص ممكن تتأخر لحد ما تفتحه. لو عايز تنبيهات مضمونة وهو مقفول استخدم تطبيق الأندرويد.</p>';
+  }
   else {
     var bo = A.battOk && A.battOk(), eo = A.exactOk && A.exactOk();
     var pr = function (name, why, good, act, lbl) { return '<div class="row"><div class="grow"><b>' + name + '</b><small>' + why + '</small></div>' + (good ? '<span class="okb">تمام ✓</span>' : '<button class="btn sec perm" type="button" data-a="' + act + '">' + lbl + '</button>') + '</div>'; };
-    h += pr('الإشعارات', 'عشان التذكيرات والتنبيهات تظهر', n, 'openn', 'اسمح') +
+    h += pr('الإشعارات', 'عشان التذكيرات والتنبيهات تظهر', n, 'askn', 'اسمح') +
       pr('المنبّهات الدقيقة', 'عشان التذكير يوصل في ميعاده بالظبط', eo, 'openx', 'اسمح') +
       pr('من غير توفير البطارية', 'عشان المؤقت والتذكيرات ما يتقفلوش', bo, 'openb', 'اسمح') +
       pr('الوصول لبيانات الاستخدام (اختياري)', 'لتنبيه استخدام الموبايل بس. بتدّيه بإيدك من إعدادات الأندرويد. بنشوف مجموع الوقت فقط، ومحليا على موبايلك', u, 'openu', 'افتح الإعداد');
+    var dd = A.dndOk && A.dndOk();
+    h += pr('عدم الإزعاج أثناء التركيز', 'عشان الموبايل يسكّت كل حاجة وإنت بتذاكر، ويرجع زي ما كان لما الجلسة تخلص. بتدّيه من «الوصول لعدم الإزعاج»', dd, 'opend', 'افتح الإعداد');
     h += '<p class="note">وفيه إذن بيشتغل من غير سؤال: إعادة التذكيرات بعد ما الموبايل يتفتح من تاني، والاهتزاز.</p>';
   }
   h += '</section><section class="card"><h2>التنبيهات</h2>';
@@ -147,13 +178,16 @@ function viewSettings() {
   if (st.study.on) h += '<div class="custom"><label for="stime" class="note">الميعاد</label><input type="time" id="stime" value="' + esc(st.study.t) + '"></div>';
   h += '<div class="row"><div class="grow"><b>تذكير الامتحانات</b><small>قبلها بـ٣ أيام وبيوم وصباح يوم الامتحان</small></div>' + sw('sw-exam', st.exam.on) + '</div>' +
     '<div class="row"><div class="grow"><b>تنبيه نهاية التركيز والراحة</b><small>يرن حتى لو التطبيق في الخلفية</small></div>' + sw('sw-focus', st.focus.on) + '</div>' +
-    '<div class="row"><div class="grow"><b>تنبيه استخدام الموبايل</b><small>رسالة لما تقعد على الموبايل وقت طويل في اليوم (اختياري)</small></div>' + sw('sw-usage', st.usage.on) + '</div>';
-  if (st.usage.on) {
+    (ok ? '<div class="row"><div class="grow"><b>رنّ زي المنبّه حتى لو الموبايل صامت</b><small>التذكيرات ونهاية التركيز بترن بصوت المنبّه وبتفضل ترن لحد ما توقفها. اتأكد إن صوت المنبّه عالي (الصوت والاهتزاز > صوت المنبّه)</small></div>' + sw('sw-alarm', st.alarm.on) + '</div>' : '') +
+    (ok ? '<div class="row"><div class="grow"><b>سكّت الموبايل أثناء التركيز</b><small>بيشغّل «عدم الإزعاج» (المنبّهات بس) طول الجلسة وبيرجّعه لما تخلص أو توقف. منبّه نهاية التركيز بيرن عادي</small></div>' + sw('sw-dnd', st.dnd.on) + '</div>' : '<p class="note">تسكيت الموبايل أثناء التركيز متاح في تطبيق الأندرويد بس.</p>') +
+    (ok ? '<div class="row"><div class="grow"><b>تنبيه استخدام الموبايل</b><small>رسالة لما تقعد على الموبايل وقت طويل في اليوم (اختياري)</small></div>' + sw('sw-usage', st.usage.on) + '</div>' : '<p class="note">تنبيه استخدام الموبايل متاح في تطبيق الأندرويد بس.</p>');
+  if (ok && st.usage.on) {
     h += '<div class="label">نبّهني بعد</div>' + chips('uh', [2, 3, 4, 5, 6].map(function (x) { return [String(x), ar(x) + ' ساعات']; }), String(st.usage.h));
     if (ok && !u) h += '<div class="callout">عشان ده يشتغل لازم تدي التطبيق إذن «الوصول لبيانات الاستخدام» بإيدك من إعدادات الأندرويد. التطبيق بيشوف مجموع وقت الاستخدام بس، مش محتوى أي حاجة، وكل ده على موبايلك. <button class="btn sec" type="button" data-a="openu">افتح الإعداد</button></div>';
     else if (ok) h += '<p class="note">الإذن شغال. المراجعة بتحصل تقريباً كل نص ساعة، فالتنبيه ممكن يتأخر شوية.</p>';
   }
-  if (ok) h += '<button class="btn sec" type="button" data-a="testn">جرّب تنبيه دلوقتي</button>';
+  if (ok || webNotifOk()) h += '<button class="btn sec" type="button" data-a="testn">جرّب تنبيه دلوقتي</button>';
+  if (U.msg) h += '<div class="callout pop">' + esc(U.msg) + '</div>';
   h += '</section>';
   return h;
 }
@@ -191,12 +225,12 @@ function render() {
 function tick() {
   var s = Math.max(0, Math.round((T.end - Date.now()) / 1000)); T.left = s;
   if (s === 0) {
-    clearInterval(T.id); T.running = false;
+    clearInterval(T.id); T.running = false; var wasBreak = T.mode === 'break';
     if (T.mode === 'break') { T.finished = 'break'; T.mode = 'focus'; T.left = T.len * 60; }
     else {
       T.finished = true; var k = dkey(new Date()); S.mins[k] = (S.mins[k] || 0) + T.len; S.sess = S.sess || {}; S.sess[k] = (S.sess[k] || 0) + 1; save();
     }
-    try { if (window.Android && Android.cancelFocus) Android.cancelFocus(); } catch (e) {}
+    if (S.settings.focus.on) notify(wasBreak ? 'الراحة خلصت' : 'برافو، خلصت الجلسة', wasBreak ? 'ارجع كمّل مذاكرة.' : 'قوم اتحرك وخد راحة قصيرة.', 'focus');
     if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
     render();
   } else {
@@ -205,7 +239,9 @@ function tick() {
   }
 }
 function andr(f) { try { if (window.Android && Android[f]) return Android[f].apply(Android, Array.prototype.slice.call(arguments, 1)); } catch (e) {} }
-document.addEventListener('visibilitychange', function () { if (!document.hidden) { if (T.running) tick(); render(); } });
+document.addEventListener('visibilitychange', function () { if (!document.hidden) { if (T.running) tick(); swPost({ type: 'check' }); render(); } });
+setInterval(function () { if (!window.Android) swPost({ type: 'check' }); }, 30000);
+setTimeout(function () { syncAndroid(); if (webNotifOk()) regPeriodic(); }, 1500);
 window.addEventListener('focus', function () { if (U.tab === 'settings') render(); });
 
 // ===== الضغطات =====
@@ -237,22 +273,31 @@ document.addEventListener('click', function (e) {
   else if (a === 'fl') { if (!T.running) { T.len = +v; T.left = T.len * 60; T.finished = false; } }
   else if (a === 'cset') { var m = Math.round(+document.getElementById('cmin').value); if (m >= 1 && m <= 300 && !T.running) { T.len = m; T.left = m * 60; T.finished = false; } }
   else if (a === 'start-t') {
+    if (S.settings.focus.on) askPerm();
     T.end = Date.now() + T.left * 1000; T.finished = false; T.running = true; clearInterval(T.id); T.id = setInterval(tick, 500);
-    if (S.settings.focus.on) andr('focusEnd', T.end, T.mode === 'break' ? 'break' : 'focus');
+    if (S.settings.focus.on || S.settings.dnd.on) andr('focusEnd', T.end, (T.mode === 'break' ? 'break' : 'focus') + (S.settings.focus.on ? '' : 'q'));
   }
   else if (a === 'pause') { T.running = false; clearInterval(T.id); andr('cancelFocus'); }
   else if (a === 'reset') { T.running = false; clearInterval(T.id); T.finished = false; T.mode = 'focus'; T.left = T.len * 60; andr('cancelFocus'); }
-  else if (a === 'brk') { clearInterval(T.id); T.mode = 'break'; T.blen = +v; T.left = T.blen * 60; T.finished = false; T.end = Date.now() + T.left * 1000; T.running = true; T.id = setInterval(tick, 500); if (S.settings.focus.on) andr('focusEnd', T.end, 'break'); }
-  else if (a === 'sw-study') { S.settings.study.on = !S.settings.study.on; save(); }
-  else if (a === 'sw-exam') { S.settings.exam.on = !S.settings.exam.on; save(); }
-  else if (a === 'sw-focus') { S.settings.focus.on = !S.settings.focus.on; save(); }
+  else if (a === 'brk') { if (S.settings.focus.on) askPerm(); clearInterval(T.id); T.mode = 'break'; T.blen = +v; T.left = T.blen * 60; T.finished = false; T.end = Date.now() + T.left * 1000; T.running = true; T.id = setInterval(tick, 500); if (S.settings.focus.on || S.settings.dnd.on) andr('focusEnd', T.end, 'break' + (S.settings.focus.on ? '' : 'q')); }
+  else if (a === 'sw-study') { S.settings.study.on = !S.settings.study.on; save(); if (S.settings.study.on) askPerm(); }
+  else if (a === 'sw-exam') { S.settings.exam.on = !S.settings.exam.on; save(); if (S.settings.exam.on) askPerm(); }
+  else if (a === 'sw-focus') { S.settings.focus.on = !S.settings.focus.on; save(); if (S.settings.focus.on) askPerm(); }
   else if (a === 'sw-usage') { S.settings.usage.on = !S.settings.usage.on; save(); if (S.settings.usage.on && window.Android && Android.usageOk && !Android.usageOk()) andr('openUsage'); }
   else if (a === 'uh') { S.settings.usage.h = +v; save(); }
   else if (a === 'openn') andr('openNotif');
   else if (a === 'openx') andr('openExact');
   else if (a === 'openb') andr('openBatt');
   else if (a === 'openu') andr('openUsage');
-  else if (a === 'testn') andr('test');
+  else if (a === 'opend') andr('openDnd');
+  else if (a === 'sw-alarm') { S.settings.alarm.on = !S.settings.alarm.on; save(); }
+  else if (a === 'sw-dnd') { S.settings.dnd.on = !S.settings.dnd.on; save(); if (S.settings.dnd.on && window.Android && Android.dndOk && !Android.dndOk()) andr('openDnd'); }
+  else if (a === 'testn') {
+    if (window.Android) { var rs = andr('test'); U.msg = rs === 'ok' ? 'اتبعت تنبيه. شوفه في شريط الإشعارات.' : rs === 'off' ? 'التنبيهات مقفولة للتطبيق. دوس «اسمح» فوق.' : 'حصلت مشكلة: ' + rs; if (rs === 'off') andr('askNotif'); }
+    else { notify('مذاكرتي', 'التنبيهات شغالة تمام ✓', 'test'); U.msg = 'اتبعت تنبيه. شوفه في شريط الإشعارات.'; }
+    setTimeout(function () { U.msg = ''; render(); }, 6000);
+  }
+  else if (a === 'askn') { if (window.Android) andr('askNotif'); else askPerm(); }
   render();
 });
 
