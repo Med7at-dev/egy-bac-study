@@ -27,7 +27,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .profile div { display: flex; flex-direction: column; } .profile span { color: var(--ink2); font-size: 12px; }
 .clock { direction: ltr; text-align: center; font-size: 72px; line-height: 1.1; padding: 24px 0; font-weight: 300; letter-spacing: -0.02em; }
 .actions { display: flex; gap: 12px; flex-wrap: wrap; }
-.done-msg { color: var(--teal); margin: 16px 0; }
+.callout { background: var(--sand); border-radius: 8px; padding: 12px 16px; margin: 16px 0; }
 input[type=text], input[type=date] { font: inherit; width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink); }
 .stat { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .stat b { color: var(--teal); }
