@@ -1,5 +1,5 @@
 // بيخزّن ملفات التطبيق عشان يشتغل من غير نت
-const CACHE = 'egy-bac-study-v5';
+const CACHE = 'egy-bac-study-v6';
 const FILES = ['./', './index.html', './style.css', './app.js', './manifest.webmanifest',
   './icons/icon.svg'];
 self.addEventListener('install', e => {
