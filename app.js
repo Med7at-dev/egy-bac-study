@@ -165,7 +165,11 @@ function viewTimer(subs) {
 function sw(name, on) { return '<button type="button" class="sw" role="switch" data-a="' + name + '" aria-checked="' + on + '"><i></i></button>'; }
 function viewTheme() {
   var cur = (S.settings && S.settings.theme) || 'classic';
-  return '<section class="card lift"><h2>المظهر</h2><p class="note">اختار اللون اللي مريحك. التغيير فوري ومتحفوظ.</p><div class="themes">' + THEMES.map(function (t) { return '<button class="themeb" type="button" data-a="theme" data-v="' + t[0] + '" aria-pressed="' + (t[0] === cur) + '"><i><s style="background:' + t[2][0] + '"></s><s style="background:' + t[2][1] + '"></s><s style="background:' + t[2][2] + '"></s></i><span>' + t[1] + '</span></button>'; }).join('') + '</div></section>';
+  return '<section class="card lift"><h2>المظهر</h2><p class="note">اختار اللون اللي مريحك. التغيير فوري ومتحفوظ.</p><div class="themes">' + THEMES.map(function (t) { return '<button class="themeb" type="button" data-a="theme" data-v="' + t[0] + '" aria-pressed="' + (t[0] === cur) + '"><i><s style="background:' + t[2][0] + '"></s><s style="background:' + t[2][1] + '"></s><s style="background:' + t[2][2] + '"></s></i><span>' + t[1] + '</span></button>'; }).join('') + '</div></section>' + viewAccess();
+function viewAccess() {
+  var fs = (S.settings && S.settings.fs) || 'm', hc = !!(S.settings && S.settings.hc);
+  return '<section class="card"><h2>سهولة القراءة</h2><p class="note">لو الكلام صغير أو الألوان مش واضحة.</p><div class="label">حجم الخط</div><div class="chips">' + [['m', 'عادي'], ['l', 'كبير'], ['xl', 'كبير جدا']].map(function (x) { return '<button class="chip" type="button" data-a="fs" data-v="' + x[0] + '" aria-pressed="' + (fs === x[0]) + '">' + x[1] + '</button>'; }).join('') + '</div><div class="row" style="margin-top:10px"><div class="grow"><b>تباين عالي</b><small>ألوان أغمق وحدود أوضح للقراءة الأسهل</small></div>' + sw('sw-hc', hc) + '</div></section>';
+}
 }
 function viewSettings() {
   var st = S.settings, A = window.Android, ok = !!(A && A.sync), n = ok && A.notifOk && A.notifOk(), u = ok && A.usageOk && A.usageOk();
@@ -220,7 +224,8 @@ function viewExams(subs) {
     '<div class="label">التاريخ</div><input type="date" id="exdate" value="' + esc(U.exDate) + '"><button class="btn" type="button" data-a="eadd">ضيف الميعاد</button></section>';
   return h;
 }
-function lessonGroup(t) { var m = /^(?:ال)?وحدة [٠-٩0-9]+/.exec(t); return m ? m[0].replace(/^ال/, 'ال') : ''; }
+function lessonGroup(t) { var m = /^(?:ال)?(?:وحدة|فصل|جزء [٠-٩0-9]+ - فصل) [٠-٩0-9]+/.exec(t); return m ? m[0] : ''; }
+function groupTitle(list, g) { for (var i = 0; i < list.length; i++) { var t = list[i].t; if (t.indexOf(g + ' (') === 0) { var e = t.indexOf('): '); if (e > 0) return t.slice(g.length + 2, e); } } return ''; }
 function viewSyl(subs) {
   if (subs.indexOf(U.ssub) < 0) U.ssub = subs[0];
   var sb = U.ssub, list = lessonsOf(sb), p = progress(sb), rv = reviewsDue(), pr = S.profile, tr = track(pr.track), h = '';
@@ -233,7 +238,9 @@ function viewSyl(subs) {
   h += '<section class="card lift"><h2>المنهج</h2>' + chips('ys', subs.map(function (x) { var q = progress(x); return [x, x + (q.total ? ' · ' + ar(q.pct) + '٪' : '')]; }), sb);
   h += '<div class="sumrow"><div><b class="big">' + ar(p.pct) + '٪</b><small>' + (list.length ? ar(p.done) + ' من ' + ar(list.length) + ' درس' : 'لسه مفيش دروس') + '</small></div></div>' + (list.length ? bar(p.pct) : '');
   var of = officialFor(sb);
-  if (of) { var have = {}; list.forEach(function (l) { have[l.t] = 1; }); var nn = of.items.filter(function (t) { return !have[t]; }).length;
+  if (pr.grade !== '2') h += '<p class="note">موقع الوزارة للبكالوريا المصرية فيه الصف التاني بس. قوايم الصف ده مش من الموقع ده.</p>';
+  if (of && of.na) h += '<p class="note"><b>مش متاح:</b> موقع الوزارة مفيهوش دروس منشورة للمادة دي (' + esc(of.src) + '). ضيف دروسك بنفسك.</p>';
+  else if (of) { var have = {}; list.forEach(function (l) { have[l.t] = 1; }); var nn = of.items.filter(function (t) { return !have[t]; }).length;
     if (nn) h += '<button class="btn" type="button" data-a="loff">حمّل دروس الوزارة (' + ar(nn) + ')</button><p class="note">' + esc(of.src) + '. من مكتبة وزارة التربية والتعليم.</p>'; }
   else if (!list.length) h += '<p class="note">مفيش قايمة رسمية متأكد منها للمادة دي لسه. ضيف دروسك بنفسك.</p>';
   if (list.length) {
@@ -244,7 +251,7 @@ function viewSyl(subs) {
       if (lf === 'todo' && l.done) return; if (lf === 'done' && !l.done) return; if (lf === 'weak' && !(l.weak && !l.done)) return;
       shown++;
       var g = lessonGroup(l.t), title = l.t, hasG = list.some(function (x) { return lessonGroup(x.t); });
-      if (g) { var ci = l.t.indexOf(':'); title = ci > 0 && ci < 60 ? l.t.slice(ci + 1).trim() : l.t; g = g.replace(/^وحدة/, 'الوحدة'); } else if (hasG && last) g = last;
+      if (g) { var g0 = g, gt = groupTitle(list, g0), rest = l.t.slice(g0.length); if (gt && rest.indexOf(' (' + gt + ')') === 0) rest = rest.slice(gt.length + 3); title = rest.replace(/^\s*:\s*/, '').trim() || l.t; g = g0.replace(/^وحدة/, 'الوحدة').replace(/^فصل/, 'الفصل') + (gt ? ' - ' + gt : ''); } else if (hasG && last) g = last;
       if (g && g !== last) h += '<div class="grp">' + esc(g) + '</div>'; last = g || last;
       if (isEd('l', l.id)) { h += edRow('l', l.id, '<input type="text" id="edt" value="' + esc(U.edT) + '">'); return; }
       var open = String(U.lx) === String(l.id);
@@ -340,7 +347,7 @@ function viewMist(subs) {
   h += '<section class="card"><h2>آخر التسجيلات</h2>' + (S.mist.length ? S.mist.slice().reverse().slice(0, 10).map(function (m) { return '<div class="row"><div class="grow"><b>' + esc(m.lesson) + '</b><small>' + esc(m.sub) + ' · ' + ar(m.n) + ' غلطة · ' + esc(m.at) + '</small></div><button class="del" type="button" data-a="mdel" data-v="' + m.id + '">مسح</button></div>'; }).join('') : '<p class="note">فاضي.</p>') + '</section>';
   return h;
 }
-var MORE = [['pp', 'papers', 'اختبارات سابقة', 'درجاتك واتجاهها لكل مادة'], ['exams2', 'stats', 'إحصائياتي', 'ساعات المذاكرة والأيام المتتالية'], ['n', 'notes', 'دفتر الأسئلة', 'اللي مفهمتوش وراجعه قبل الامتحان'], ['b', 'backup', 'نسخة احتياطية', 'تصدير واسترجاع بياناتك'], ['s', 'settings', 'الإعدادات والتنبيهات', 'الأذونات والتذكيرات'], ['r', 'rem', 'تذكيرات المواد', 'ميعاد التذكير والتكرار لحد ما تذاكر'], ['k', 'streak', 'السلسلة والهدف والتقرير', 'رتبتك والجوكر والتقرير الأسبوعي'], ['t', 'theme', 'المظهر', 'فاتح، داكن، وألوان تانية'], ['m', 'mist', 'سجل أخطاء الامتحانات', 'الدروس اللي غلطت فيها ترجع للمراجعة'], ['f', 'feedback', 'اقتراحات وشكاوى', 'قولنا رأيك']];
+var MORE = [['exams2', 'stats', 'إحصائياتي', 'ساعات المذاكرة والأيام المتتالية'], ['pp', 'papers', 'اختبارات سابقة', 'درجاتك واتجاهها لكل مادة'], ['m', 'mist', 'سجل أخطاء الامتحانات', 'الدروس اللي غلطت فيها ترجع للمراجعة'], ['n', 'notes', 'دفتر الأسئلة', 'اللي مفهمتوش وراجعه قبل الامتحان'], ['k', 'streak', 'السلسلة والهدف والتقرير', 'رتبتك والجوكر والتقرير الأسبوعي'], ['r', 'rem', 'تذكيرات المواد', 'ميعاد التذكير والتكرار لحد ما تذاكر'], ['t', 'theme', 'المظهر وسهولة القراءة', 'الألوان وحجم الخط والتباين'], ['s', 'settings', 'الإعدادات والتنبيهات', 'الأذونات والتذكيرات'], ['b', 'backup', 'نسخة احتياطية', 'تصدير واسترجاع بياناتك'], ['f', 'feedback', 'اقتراحات وشكاوى', 'قولنا رأيك']];
 function viewMore(subs) {
   if (!U.sub) return '<section class="card lift"><h2>المزيد</h2>' + MORE.map(function (m) { return '<button class="menu" type="button" data-a="gosub" data-v="' + m[1] + '"><b>' + m[2] + '</b><small>' + m[3] + '</small></button>'; }).join('') + '</section>';
   var back = '<button class="pill dark" type="button" data-a="gosub" data-v="">رجوع للمزيد</button>';
@@ -426,6 +433,7 @@ document.addEventListener('click', function (e) {
   else if (a === 'se') { s.elective = v; S.profile.electives = S.profile.electives || {}; S.profile.electives[s.track] = v; save(); }
   else if (a === 'start') { if (setupReady(s)) { U.anim = 'in-up'; U.tab = 'home'; S.profile = { grade: s.grade, track: s.track, elective: s.elective, electives: S.profile.electives || {}, custom: S.profile.custom || [] }; U.editing = false; save(); } }
   else if (a === 'edit') { U.anim = 'in-up'; U.setup = { grade: S.profile.grade, track: S.profile.track, elective: S.profile.elective }; U.editing = true; }
+  else if (a === 'fs') { S.settings.fs = v; save(); applyTheme(); }
   else if (a === 'theme') { S.settings.theme = v; save(); applyTheme(); }
   else if (a === 'tog') { U.open = U.open || {}; U.open[v] = !U.open[v]; }
   else if (a === 'startsub') { U.fsub = v; U.anim = 'in-next'; U.tab = 'timer'; U.sub = ''; window.scrollTo(0, 0); }
@@ -452,6 +460,7 @@ document.addEventListener('click', function (e) {
   else if (a === 'reset') { T.running = false; clearInterval(T.id); T.finished = false; T.mode = 'focus'; T.left = T.len * 60; andr('cancelFocus'); }
   else if (a === 'brk') { if (S.settings.focus.on) askPerm(); clearInterval(T.id); T.mode = 'break'; T.blen = +v; T.left = T.blen * 60; T.finished = false; T.end = Date.now() + T.left * 1000; T.running = true; T.id = setInterval(tick, 500); if (S.settings.focus.on || S.settings.dnd.on) andr('focusEnd', T.end, 'break' + (S.settings.focus.on ? '' : 'q')); }
   else if (a === 'sw-study') { S.settings.study.on = !S.settings.study.on; save(); if (S.settings.study.on) askPerm(); }
+  else if (a === 'sw-hc') { S.settings.hc = !S.settings.hc; save(); applyTheme(); }
   else if (a === 'sw-exam') { S.settings.exam.on = !S.settings.exam.on; save(); if (S.settings.exam.on) askPerm(); }
   else if (a === 'sw-focus') { S.settings.focus.on = !S.settings.focus.on; save(); if (S.settings.focus.on) askPerm(); }
   else if (a === 'sw-usage') { S.settings.usage.on = !S.settings.usage.on; save(); if (S.settings.usage.on && window.Android && Android.usageOk && !Android.usageOk()) andr('openUsage'); }

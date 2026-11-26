@@ -1,7 +1,10 @@
 # Changelog
 
 ## 1.2.4
-- New app icon: check mark in a progress ring with a pencil. Also used for the site icon.
+- New app icon: check mark in a progress ring with a pencil, in the app's green, copper and cream. Also used for the site icon.
+- Reading comfort in Settings: text size (normal / large / extra large) and a high-contrast switch.
+- Simpler, more compact layout; cleaner More menu order.
+- Grade 2 subjects and lesson lists now come only from the Ministry's Egyptian Baccalaureate site (Arabic, National History, English, Math, Physics, Chemistry, Programming and AI, Psychology, Financial Literacy; Business and Accounting list units only). Second foreign language has no published lessons there, so it is marked not available. The old grade 2 lists came from the previous system and were removed.
 
 ## 1.2.3
 - Subjects follow the official Baccalaureate decision: grade 2 core subjects + one track elective (picked automatically, swap it from the syllabus tab), plus Financial Culture; grade 3 track subjects + Religion.
