@@ -177,3 +177,13 @@ input[type=file] { width: 100%; padding: 8px 0; font: inherit; }
 .row:has(.acts) { flex-wrap: wrap; }
 .row .acts { display: flex; gap: 6px; align-items: center; flex: 1 1 100%; flex-wrap: wrap; }
 .row .acts .del { margin-inline-start: auto; }
+/* 1.2.3: شاشة المنهج أهدى */
+.sumrow { display: flex; align-items: baseline; gap: 12px; margin: 14px 0 6px; } .sumrow .big { font-size: 1.9rem; color: var(--green); margin-inline-end: 10px; } .sumrow small { opacity: .7; }
+.chips.fl { margin: 14px 0 6px; } .chip.sm { min-height: 36px; padding: 4px 12px; font-size: .88rem; }
+.grp { margin: 18px 0 2px; padding-bottom: 4px; font-size: .82rem; letter-spacing: .02em; color: var(--copper); border-bottom: 1px solid var(--line); }
+.lrow { border-bottom: 1px solid var(--line); } .lrow .row { border-bottom: 0; padding: 8px 0; } .lrow.open { background: color-mix(in srgb, var(--copper) 7%, transparent); border-radius: 12px; padding-inline: 8px; margin-inline: -8px; }
+.ltxt { flex: 1; text-align: start; background: transparent; border: 0; font: inherit; color: var(--ink); line-height: 1.7; padding: 6px 0; min-height: 44px; display: flex; align-items: center; gap: 8px; } .ltxt.done { opacity: .55; text-decoration: line-through; text-decoration-thickness: 1px; }
+.wdot { width: 8px; height: 8px; border-radius: 50%; background: var(--copper); flex: none; }
+.lrow .acts { padding: 0 0 10px 0; }
+.card h2 { letter-spacing: 0; } .card { box-shadow: 0 6px 20px rgba(31,58,51,.08); }
+body { line-height: 1.65; }

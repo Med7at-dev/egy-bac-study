@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.3
+- Subjects follow the official Baccalaureate decision: grade 2 core subjects + one track elective (picked automatically, swap it from the syllabus tab), plus Financial Culture; grade 3 track subjects + Religion.
+- Calmer syllabus screen: lesson actions hide behind a tap, filter (all / to do / done / weak), lessons grouped by unit, short subject chips with progress.
+- Android back button now goes back one screen inside the app and only exits from the home screen.
+- Softer spacing and shadows.
+
 ## 1.2.2
 - Edit and reorder: rename lessons, change minutes of a study slot, edit to-dos, and move items up or down.
 - To-do due date with an optional reminder notification.

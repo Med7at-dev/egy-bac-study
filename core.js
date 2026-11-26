@@ -15,7 +15,7 @@ var FOCUS = [25, 45, 60];
 // ===== الحفظ على الموبايل =====
 var KEY = 'egy-bac-study.v1';
 var S = { settings: { study: { on: false, t: '17:00' }, exam: { on: true }, focus: { on: true }, usage: { on: false, h: 4 }, dnd: { on: false }, alarm: { on: true } }, sess: {}, profile: { grade: '', track: '', elective: '', electives: {}, custom: [] }, tasks: [], exams: [], mins: {}, lessons: {}, notes: [], mist: [], rem: [], smins: {}, stop: {}, jk: {}, mg: {}, papers: [], auto: { b: 90 }, todos: [] };
-var APP_VERSION = '1.2.2';
+var APP_VERSION = '1.2.3';
 // عنوان استقبال الاقتراحات والشكاوى
 var FEEDBACK_TO = 'mimoprograming847@gmail.com';
 try { var saved = JSON.parse(localStorage.getItem(KEY)); if (saved) { for (var k in S) if (saved[k] !== undefined) S[k] = saved[k]; } } catch (e) {}
@@ -90,7 +90,7 @@ function askPerm() {
 function regPeriodic() { try { navigator.serviceWorker.ready.then(function (r) { if (r.periodicSync) r.periodicSync.register('mz-check', { minInterval: 6 * 3600 * 1000 }).catch(function () {}); }); } catch (e) {} }
 
 // ===== حالة مؤقتة (مش بتتحفظ) =====
-var U = { fsub: '', msub: '', mlesson: '', mcount: '1', mtext: '', rsub: '', rkind: 'study', rtime: '17:00', runtil: '22:00', rrep: '0', tab: 'home', anim: '', editing: false, setup: { grade: '', track: '', elective: '' }, day: String(new Date().getDay()), subj: '', dur: '60', exSubj: '', exDate: '', extra: '', msg: '', sub: '', ssub: '', lessonText: '', bulkN: '', nsub: '', noteText: '', nfilter: 'open', fbKind: 'suggestion', fbText: '', bkText: '', psub: '', todoText: '', todoDue: '', todoTm: '', todoRem: false, ed: null, edT: '', edM: '', edD: '', edTm: '', pscore: '', pmax: '100', pdate: '', pend: null, bmsg: '' };
+var U = { fsub: '', msub: '', mlesson: '', mcount: '1', mtext: '', rsub: '', rkind: 'study', rtime: '17:00', runtil: '22:00', rrep: '0', tab: 'home', anim: '', editing: false, setup: { grade: '', track: '', elective: '' }, day: String(new Date().getDay()), subj: '', dur: '60', exSubj: '', exDate: '', extra: '', msg: '', sub: '', ssub: '', lessonText: '', bulkN: '', nsub: '', noteText: '', nfilter: 'open', fbKind: 'suggestion', fbText: '', bkText: '', psub: '', lx: '', lf: 'all', todoText: '', todoDue: '', todoTm: '', todoRem: false, ed: null, edT: '', edM: '', edD: '', edTm: '', pscore: '', pmax: '100', pdate: '', pend: null, bmsg: '' };
 var T = { sub: '', mode: 'focus', blen: 5, len: 25, left: 25 * 60, running: false, end: 0, finished: false, id: null };
 
 // ===== أدوات =====
@@ -273,11 +273,12 @@ function track(v) { return TRACKS.filter(function (t) { return t.v === v; })[0];
 function subjectsFor(p) {
   var t = track(p.track), base = [];
   if (p.grade === '1') base = GRADE1;
-  if (p.grade === '2' && t) base = ['اللغة العربية', 'لغة أجنبية أولى (إنجليزي)', 'التاريخ', p.elective];
-  if (p.grade === '3' && t) base = t.g3;
+  if (p.grade === '2' && t) base = ['اللغة العربية', 'لغة أجنبية أولى (إنجليزي)', 'التاريخ', p.elective || t.el[0], 'الثقافة المالية'];
+  if (p.grade === '3' && t) base = t.g3.concat(['التربية الدينية']);
   return base.filter(Boolean).concat(p.custom || []);
 }
-function setupReady(s) { return s.grade === '1' || (s.grade === '3' && s.track) || (s.grade === '2' && s.track && s.elective); }
+function setupReady(s) { return s.grade === '1' || (s.grade === '3' && s.track) || (s.grade === '2' && s.track); }
+function defElective(track, grade) { var t = TRACKS.filter(function (x) { return x.v === track; })[0]; return grade === '2' && t ? ((S.profile.electives || {})[track] || t.el[0]) : ''; }
 function chips(name, opts, val) {
   return '<div class="chips">' + opts.map(function (o) { return '<button class="chip" type="button" data-a="' + name + '" data-v="' + esc(o[0]) + '" aria-pressed="' + (o[0] === val) + '">' + esc(o[1]) + '</button>'; }).join('') + '</div>';
 }

@@ -3,10 +3,10 @@ function viewSetup() {
   var s = U.setup, t = track(s.track), h = '<h2>إنت في أنهي صف؟</h2>' + chips('sg', GRADES, s.grade);
   if (s.grade === '2' || s.grade === '3') {
     h += '<h2>اختار مسارك</h2>' + chips('st', TRACKS.map(function (x) { return [x.v, x.l]; }), s.track);
-    if (s.grade === '2' && t) h += '<div class="label">مادة المسار (اختار واحدة)</div>' + chips('se', subjOpts(t.el), s.elective);
+    if (s.grade === '2' && t) h += '<div class="label">مادة المسار (اتحددت لك، تقدر تبدلها بالتانية)</div>' + chips('se', subjOpts(t.el), s.elective);
   }
   if (s.grade && setupReady(s)) {
-    h += '<h2>موادك</h2><p>' + esc(subjectsFor({ grade: s.grade, track: s.track, elective: s.elective, custom: [] }).join('، ')) + '</p>' +
+    h += '<h2>موادك</h2><p class="note">المواد الأساسية بتتحدد لوحدها حسب الصف والمسار.</p><p>' + esc(subjectsFor({ grade: s.grade, track: s.track, elective: s.elective, custom: [] }).join('، ')) + '</p>' +
       '<button class="btn" type="button" data-a="start">ابدأ</button>';
   }
   return h;
@@ -220,29 +220,44 @@ function viewExams(subs) {
     '<div class="label">التاريخ</div><input type="date" id="exdate" value="' + esc(U.exDate) + '"><button class="btn" type="button" data-a="eadd">ضيف الميعاد</button></section>';
   return h;
 }
+function lessonGroup(t) { var m = /^(?:ال)?وحدة [٠-٩0-9]+/.exec(t); return m ? m[0].replace(/^ال/, 'ال') : ''; }
 function viewSyl(subs) {
   if (subs.indexOf(U.ssub) < 0) U.ssub = subs[0];
-  var sb = U.ssub, list = lessonsOf(sb), p = progress(sb), rv = reviewsDue();
-  var h = '<section class="card lift"><h2>تقدّمك في المنهج</h2>' + subs.map(function (x) { var q = progress(x); return '<div class="sp"><span>' + esc(x) + '</span><b>' + (q.total ? ar(q.done) + '/' + ar(q.total) + ' · ' + ar(q.pct) + '٪' : 'لسه مفيش دروس') + '</b></div>' + bar(q.pct); }).join('') + '</section>';
+  var sb = U.ssub, list = lessonsOf(sb), p = progress(sb), rv = reviewsDue(), pr = S.profile, tr = track(pr.track), h = '';
+  if (pr.grade === '2' && tr) h += '<section class="card"><h2>مادة المسار</h2><p class="note">اختار مادتك التخصصية. الدروس المتسجلة بتفضل محفوظة.</p>' + chips('se2', subjOpts(tr.el), pr.elective || tr.el[0]) + '</section>';
   if (rv.length) {
     h += '<section class="card"><h2>مراجعات مستنياك (' + ar(rv.length) + ')</h2>' + rv.map(function (r) {
       return '<div class="row"><button class="check" type="button" data-a="rvdone" data-v="' + r.l.id + '" data-s="' + esc(r.sub) + '" aria-pressed="false" aria-label="راجعت"></button><div class="grow"><b>' + esc(r.l.t) + '</b><small>' + esc(r.sub) + ' · ' + (r.st === 0 ? 'مراجعة بعد يوم' : 'مراجعة بعد أسبوع') + '</small></div></div>';
     }).join('') + '</section>';
   }
-  var wk = []; subs.forEach(function (x) { lessonsOf(x).forEach(function (l) { if (l.weak && !l.done) wk.push({ s: x, l: l }); }); });
-  if (wk.length) h += '<section class="card"><h2>نقط ضعف (' + ar(wk.length) + ')</h2><p class="note">الخطة التلقائية بتدّيها وقت أكتر.</p>' + wk.map(function (x) { return '<div class="row"><div class="grow"><b>' + esc(x.l.t) + '</b><small>' + esc(x.s) + '</small></div></div>'; }).join('') + '</section>';
-  h += '<section class="card"><h2>دروس المادة</h2>' + chips('ys', subjOpts(subs), sb);
-  h += '<div class="label">' + (list.length ? ar(p.done) + ' من ' + ar(list.length) + ' اتخلصوا' : 'ضيف دروس المادة دي') + '</div>' + (list.length ? bar(p.pct) : '');
-  list.forEach(function (l) {
-    if (isEd('l', l.id)) { h += edRow('l', l.id, '<input type="text" id="edt" value="' + esc(U.edT) + '">'); return; }
-    h += '<div class="row"><button class="check" type="button" data-a="ldone" data-v="' + l.id + '" aria-pressed="' + !!l.done + '" aria-label="خلصت">' + (l.done ? '✓' : '') + '</button><div class="grow' + (l.done ? ' done' : '') + '"><b>' + esc(l.t) + '</b>' + (l.done && l.at ? '<small>اتخلص ' + esc(l.at) + '</small>' : '') + '</div><div class="acts">' + mvb('l', l.id) + '<button class="weakb" type="button" data-a="lweak" data-v="' + l.id + '" aria-pressed="' + !!l.weak + '">ضعيف</button><button class="del" type="button" data-a="ldel" data-v="' + l.id + '">مسح</button></div></div>';
-  });
+  h += '<section class="card lift"><h2>المنهج</h2>' + chips('ys', subs.map(function (x) { var q = progress(x); return [x, x + (q.total ? ' · ' + ar(q.pct) + '٪' : '')]; }), sb);
+  h += '<div class="sumrow"><div><b class="big">' + ar(p.pct) + '٪</b><small>' + (list.length ? ar(p.done) + ' من ' + ar(list.length) + ' درس' : 'لسه مفيش دروس') + '</small></div></div>' + (list.length ? bar(p.pct) : '');
   var of = officialFor(sb);
   if (of) { var have = {}; list.forEach(function (l) { have[l.t] = 1; }); var nn = of.items.filter(function (t) { return !have[t]; }).length;
-    h += '<div class="label">دروس رسمية</div><p class="note">' + esc(of.src) + '. من مكتبة وزارة التربية والتعليم.</p>' + (nn ? '<button class="btn sec" type="button" data-a="loff">حمّل دروس الوزارة (' + ar(nn) + ')</button>' : '<p class="note">كل دروس الوزارة متضافة.</p>'); }
-  else h += '<p class="note">مفيش قايمة دروس رسمية متأكد منها للمادة دي لسه. ضيف دروسك بنفسك.</p>';
-  h += '<div class="label">درس جديد</div><div class="custom"><input type="text" id="lesson" placeholder="اسم الدرس" value="' + esc(U.lessonText) + '"><button class="btn sec" type="button" data-a="ladd">ضيف</button></div>' +
-    '<div class="label">أو ضيف كذا درس مرة واحدة (هيتسموا درس ١، درس ٢...)</div><div class="custom"><input type="number" id="bulk" inputmode="numeric" min="1" max="100" placeholder="عدد الدروس" value="' + esc(U.bulkN) + '"><button class="btn sec" type="button" data-a="lbulk">ضيف</button></div></section>';
+    if (nn) h += '<button class="btn" type="button" data-a="loff">حمّل دروس الوزارة (' + ar(nn) + ')</button><p class="note">' + esc(of.src) + '. من مكتبة وزارة التربية والتعليم.</p>'; }
+  else if (!list.length) h += '<p class="note">مفيش قايمة رسمية متأكد منها للمادة دي لسه. ضيف دروسك بنفسك.</p>';
+  if (list.length) {
+    var lf = U.lf || 'all', nw = list.filter(function (l) { return l.weak && !l.done; }).length;
+    h += '<div class="chips fl">' + [['all', 'الكل'], ['todo', 'لسه (' + ar(list.length - p.done) + ')'], ['done', 'خلصت (' + ar(p.done) + ')']].concat(nw ? [['weak', 'ضعيف (' + ar(nw) + ')']] : []).map(function (o) { return '<button class="chip sm" type="button" data-a="lf" data-v="' + o[0] + '" aria-pressed="' + (lf === o[0]) + '">' + o[1] + '</button>'; }).join('') + '</div>';
+    var last = null, shown = 0;
+    list.forEach(function (l) {
+      if (lf === 'todo' && l.done) return; if (lf === 'done' && !l.done) return; if (lf === 'weak' && !(l.weak && !l.done)) return;
+      shown++;
+      var g = lessonGroup(l.t), title = l.t, hasG = list.some(function (x) { return lessonGroup(x.t); });
+      if (g) { var ci = l.t.indexOf(':'); title = ci > 0 && ci < 60 ? l.t.slice(ci + 1).trim() : l.t; g = g.replace(/^وحدة/, 'الوحدة'); } else if (hasG && last) g = last;
+      if (g && g !== last) h += '<div class="grp">' + esc(g) + '</div>'; last = g || last;
+      if (isEd('l', l.id)) { h += edRow('l', l.id, '<input type="text" id="edt" value="' + esc(U.edT) + '">'); return; }
+      var open = String(U.lx) === String(l.id);
+      h += '<div class="lrow' + (open ? ' open' : '') + '"><div class="row"><button class="check" type="button" data-a="ldone" data-v="' + l.id + '" aria-pressed="' + !!l.done + '" aria-label="خلصت">' + (l.done ? '✓' : '') + '</button><button class="ltxt' + (l.done ? ' done' : '') + '" type="button" data-a="lx" data-v="' + l.id + '" aria-expanded="' + open + '"><span>' + esc(title) + '</span>' + (l.weak && !l.done ? '<i class="wdot" title="ضعيف"></i>' : '') + '</button></div>' +
+        (open ? '<div class="acts">' + mvb('l', l.id) + '<button class="weakb" type="button" data-a="lweak" data-v="' + l.id + '" aria-pressed="' + !!l.weak + '">ضعيف</button><button class="del" type="button" data-a="ldel" data-v="' + l.id + '">مسح</button></div>' : '') + '</div>';
+    });
+    if (!shown) h += '<p class="note">مفيش دروس في الفلتر ده.</p>';
+  }
+  var ao = !!(U.open && U.open.addl);
+  h += '<button class="btn ghost" type="button" data-a="tog" data-v="addl">' + (ao ? 'اقفل' : 'ضيف دروس بنفسك') + '</button>';
+  if (ao) h += '<div class="label">درس جديد</div><div class="custom"><input type="text" id="lesson" placeholder="اسم الدرس" value="' + esc(U.lessonText) + '"><button class="btn sec" type="button" data-a="ladd">ضيف</button></div>' +
+    '<div class="label">أو كذا درس مرة واحدة (درس ١، درس ٢...)</div><div class="custom"><input type="number" id="bulk" inputmode="numeric" min="1" max="100" placeholder="عدد الدروس" value="' + esc(U.bulkN) + '"><button class="btn sec" type="button" data-a="lbulk">ضيف</button></div>';
+  h += '</section>';
   return h;
 }
 function viewStats() {
@@ -403,8 +418,11 @@ function ti(k) { for (var i = 0; i < TABS.length; i++) if (TABS[i][0] === k) ret
 document.addEventListener('click', function (e) {
   var b = e.target.closest('[data-a]'); if (!b) return;
   var a = b.dataset.a, v = b.dataset.v, s = U.setup;
-  if (a === 'sg') { if (s.grade !== v) { s.grade = v; if (v === '1') s.track = ''; s.elective = (S.profile.electives || {})[s.track] || ''; } }
-  else if (a === 'st') { if (s.track !== v) { s.track = v; s.elective = (S.profile.electives || {})[v] || ''; } }
+  if (a === 'sg') { if (s.grade !== v) { s.grade = v; if (v === '1') s.track = ''; s.elective = defElective(s.track, v); } }
+  else if (a === 'st') { if (s.track !== v) { s.track = v; s.elective = defElective(v, s.grade); } }
+  else if (a === 'se2') { S.profile.elective = v; S.profile.electives = S.profile.electives || {}; S.profile.electives[S.profile.track] = v; U.ssub = v; save(); }
+  else if (a === 'lx') U.lx = (U.lx === v ? '' : v);
+  else if (a === 'lf') U.lf = v;
   else if (a === 'se') { s.elective = v; S.profile.electives = S.profile.electives || {}; S.profile.electives[s.track] = v; save(); }
   else if (a === 'start') { if (setupReady(s)) { U.anim = 'in-up'; U.tab = 'home'; S.profile = { grade: s.grade, track: s.track, elective: s.elective, electives: S.profile.electives || {}, custom: S.profile.custom || [] }; U.editing = false; save(); } }
   else if (a === 'edit') { U.anim = 'in-up'; U.setup = { grade: S.profile.grade, track: S.profile.track, elective: S.profile.elective }; U.editing = true; }
@@ -539,7 +557,18 @@ document.addEventListener('click', function (e) {
     U.msg = okf ? 'اتنسخت الرسالة.' : 'النسخ مش شغال هنا.';
   }
   else if (a === 'askn') { if (window.Android) andr('askNotif'); else askPerm(); }
+  histSync();
   render();
+});
+
+// ===== زرار الرجوع: كل شاشة خطوة في السجل =====
+var HK = '';
+function hkey() { return U.tab + '|' + U.sub + '|' + (U.editing ? 'e' : ''); }
+function histSync() { var k = hkey(); if (k !== HK) { HK = k; try { history.pushState({ tab: U.tab, sub: U.sub, e: !!U.editing }, ''); } catch (e) {} } }
+try { HK = hkey(); history.replaceState({ tab: U.tab, sub: U.sub, e: false }, ''); } catch (e) {}
+window.addEventListener('popstate', function (e) {
+  var s = e.state; if (!s || !s.tab) return;
+  U.tab = s.tab; U.sub = s.sub || ''; U.editing = !!s.e; U.ed = null; U.pend = null; U.anim = 'in-prev'; HK = hkey(); render(); window.scrollTo(0, 0);
 });
 
 render();
