@@ -21,6 +21,15 @@ var FEEDBACK_TO = 'mimoprograming847@gmail.com';
 try { var saved = JSON.parse(localStorage.getItem(KEY)); if (saved) { for (var k in S) if (saved[k] !== undefined) S[k] = saved[k]; } } catch (e) {}
 S.lessons = (S.lessons && typeof S.lessons === 'object') ? S.lessons : {}; S.notes = Array.isArray(S.notes) ? S.notes : []; S.mist = Array.isArray(S.mist) ? S.mist : []; S.rem = Array.isArray(S.rem) ? S.rem : []; S.smins = S.smins || {}; S.stop = S.stop || {}; S.jk = (S.jk && typeof S.jk === 'object') ? S.jk : {}; S.mg = (S.mg && typeof S.mg === 'object') ? S.mg : {}; S.mins = S.mins || {}; S.exams = S.exams || []; S.tasks = S.tasks || [];
 S.settings = S.settings || {}; ['study', 'exam', 'focus', 'usage', 'dnd', 'alarm'].forEach(function (k) { if (!S.settings[k]) S.settings[k] = { study: { on: false, t: '17:00' }, exam: { on: true }, focus: { on: true }, usage: { on: false, h: 4 }, dnd: { on: false }, alarm: { on: true } }[k]; });
+var THEMES = [['classic', 'كلاسيك', ['#1f3a33', '#faf6f0', '#b0702f']], ['light', 'فاتح', ['#26485a', '#f6f8fa', '#2f7f86']], ['dark', 'داكن', ['#1d3530', '#12161a', '#c98a4b']], ['sea', 'بحري', ['#12394a', '#f1f6f7', '#2a8c99']], ['rose', 'ورد هادئ', ['#4a2c33', '#fbf3f2', '#b0702f']], ['auto', 'حسب الجهاز', ['#1f3a33', '#12161a', '#c98a4b']]];
+function themeNow() { var t = (S.settings && S.settings.theme) || 'classic'; if (t === 'auto') { try { t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'classic'; } catch (e) { t = 'classic'; } } return t; }
+function applyTheme() {
+  var t = themeNow(), bg = { classic: '#1f3a33', light: '#26485a', dark: '#1d3530', sea: '#12394a', rose: '#4a2c33' }[t] || '#1f3a33';
+  document.documentElement.setAttribute('data-theme', t);
+  var m = document.querySelector('meta[name=theme-color]'); if (m) m.setAttribute('content', bg);
+}
+applyTheme();
+try { if (window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { if (S.settings.theme === 'auto') applyTheme(); }); } catch (e) {}
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} syncAndroid(); }
 function cfgOut() { return { settings: S.settings, exams: S.exams, rem: remEvents(S, new Date()), stop: S.stop }; }
 function syncAndroid() {

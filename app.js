@@ -39,36 +39,32 @@ function planLine(x) {
   var names = x.rest.slice(0, x.per).map(function (l) { return l.t; });
   return names.join('، ');
 }
+function sec(id, title, sum, body) {
+  var o = !!(U.open && U.open[id]);
+  return '<section class="card sec' + (o ? ' open' : '') + '"><button class="sec-h" type="button" data-a="tog" data-v="' + id + '" aria-expanded="' + o + '"><span><b>' + title + '</b><small>' + sum + '</small></span><i aria-hidden="true"></i></button>' + (o ? '<div class="sec-b">' + body + '</div>' : '') + '</section>';
+}
 function viewHome(subs) {
   var today = new Date().getDay(), tl = S.tasks.filter(function (t) { return t.day === today; }), dn = tl.filter(function (t) { return t.done; }).length;
-  var mins = S.mins[dkey(new Date())] || 0, nx = nextExam(), pl = examPlan(), rv = reviewsDue();
-  var h = '';
-  if (nx) {
-    var n = daysUntil(nx.date);
-    h += '<section class="card lift"><h2>الامتحانات الشاملة</h2><div class="count' + (n <= 3 ? ' urgent' : '') + '"><b>' + ar(n) + '</b><span>' + (n === 0 ? 'امتحان ' + esc(nx.subject) + ' النهارده' : 'يوم لحد امتحان ' + esc(nx.subject)) + '</span></div>' +
-      '<button class="btn sec" type="button" data-a="tab" data-v="exams">كل الامتحانات</button></section>';
-  } else {
-    h += '<section class="card lift"><h2>الامتحانات الشاملة</h2><p class="note">ضيف أول ميعاد امتحان شامل وهيظهر هنا العدّاد.</p><button class="btn" type="button" data-a="tab" data-v="exams">ضيف ميعاد</button></section>';
-  }
-  if (pl.length) {
-    h += '<section class="card"><h2>المطلوب النهارده من المنهج</h2>';
-    pl.slice(0, 3).forEach(function (x) {
-      h += '<div class="row"><div class="days">' + ar(x.per) + '</div><div class="grow"><b>' + esc(x.e.subject) + '</b><small>' + esc(planLine(x)) + '</small></div></div>';
-    });
-    h += '<p class="note">متوزّع على الأيام الباقية لحد الامتحان.</p></section>';
-  }
-  if (rv.length) {
-    h += '<section class="card"><h2>وقت المراجعة</h2>';
-    rv.slice(0, 4).forEach(function (r) {
-      h += '<div class="row"><button class="check" type="button" data-a="rvdone" data-v="' + r.l.id + '" data-s="' + esc(r.sub) + '" aria-pressed="false" aria-label="راجعت"></button><div class="grow"><b>' + esc(r.l.t) + '</b><small>' + esc(r.sub) + ' · ' + (r.st === 0 ? 'مراجعة بعد يوم' : 'مراجعة بعد أسبوع') + '</small></div></div>';
-    });
-    if (rv.length > 4) h += '<p class="note">وفيه ' + ar(rv.length - 4) + ' كمان في تبويب المنهج.</p>';
-    h += '</section>';
-  }
-  h += '<section class="card"><h2>' + (tl.length ? ar(dn) + ' من ' + ar(tl.length) + ' خلصوا النهارده' : 'مفيش حاجة في الجدول النهارده') + '</h2>' + taskList(tl, 'ضيف أول مادة في الجدول.') +
-    '<button class="btn" type="button" data-a="tab" data-v="plan">ضيف حصة مذاكرة</button></section>';
-  (function () { var j = jkc(), g = j.goal, n = streak(), rk = rank(n); h += '<section class="card"><h2>مذاكرتك</h2><div class="stat"><span>النهارده</span><b>' + fmtMin(mins) + ' من ' + fmtMin(g) + '</b></div>' + bar(Math.min(100, Math.round(mins * 100 / g))) + '<div class="stat"><span>أيام السلسلة</span><b>' + ar(n) + ' · ' + esc(rk.t) + '</b></div><p class="note msgl">' + esc(dailyMsg()) + '</p><button class="btn sec" type="button" data-a="tab" data-v="timer">مؤقت التركيز</button> <button class="btn sec" type="button" data-a="gosub" data-v="streak">السلسلة والتقرير</button> <button class="btn sec" type="button" data-a="gosub" data-v="stats">إحصائياتي</button></section>'; })();
-  h += '<section class="card"><h2>موادك</h2>' + subs.map(function (sb) { var p = progress(sb); return '<div class="sp"><span>' + esc(sb) + '</span><b>' + (p.total ? ar(p.pct) + '٪' : '-') + '</b></div>' + bar(p.pct); }).join('') + '</section>';
+  var mins = S.mins[dkey(new Date())] || 0, nx = nextExam(), pl = examPlan(), rv = reviewsDue(), j = jkc(), g = j.goal, n = streak(), rk = rank(n);
+  var nextT = tl.filter(function (t) { return !t.done; })[0];
+  // ===== النهارده (بس اللي محتاجه دلوقتي) =====
+  var h = '<section class="card lift today"><h2>النهارده</h2>';
+  if (nextT) h += '<div class="nexttask"><small>المهمة الجاية</small><b>' + esc(nextT.subject) + '</b><span>' + ar(nextT.minutes) + ' دقيقة</span></div><button class="btn" type="button" data-a="startsub" data-v="' + esc(nextT.subject) + '">ابدأ جلسة تركيز</button>';
+  else h += '<div class="nexttask"><small>' + (tl.length ? 'خلصت كل مهام النهارده' : 'مفيش مهام في الجدول النهارده') + '</small><b>' + (tl.length ? 'برافو عليك' : 'ابدأ بجلسة تركيز أو ضيف حصة') + '</b></div><button class="btn" type="button" data-a="tab" data-v="timer">ابدأ جلسة تركيز</button>';
+  h += '<div class="stat"><span>مذاكرة النهارده</span><b>' + fmtMin(mins) + ' من ' + fmtMin(g) + '</b></div>' + bar(Math.min(100, Math.round(mins * 100 / g))) +
+    '<div class="stat"><span>أيام السلسلة</span><b>' + ar(n) + ' · ' + esc(rk.t) + '</b></div><p class="note msgl">' + esc(dailyMsg()) + '</p></section>';
+  // ===== باقي الأقسام: مقفولة، دوس تفتح =====
+  var eb, es;
+  if (nx) { var d = daysUntil(nx.date); es = (d === 0 ? 'امتحان ' + esc(nx.subject) + ' النهارده' : 'باقي ' + ar(d) + ' يوم على ' + esc(nx.subject)); eb = '<div class="count' + (d <= 3 ? ' urgent' : '') + '"><b>' + ar(d) + '</b><span>' + (d === 0 ? 'امتحان ' + esc(nx.subject) + ' النهارده' : 'يوم لحد امتحان ' + esc(nx.subject)) + '</span></div><button class="btn sec" type="button" data-a="tab" data-v="exams">كل الامتحانات</button>'; }
+  else { es = 'مفيش ميعاد لسه'; eb = '<p class="note">ضيف أول ميعاد امتحان شامل وهيظهر هنا العدّاد.</p><button class="btn" type="button" data-a="tab" data-v="exams">ضيف ميعاد</button>'; }
+  h += sec('exam', 'الامتحانات الشاملة', es, eb);
+  var pb = pl.length ? pl.slice(0, 3).map(function (x) { return '<div class="row"><div class="days">' + ar(x.per) + '</div><div class="grow"><b>' + esc(x.e.subject) + '</b><small>' + esc(planLine(x)) + '</small></div></div>'; }).join('') + '<p class="note">متوزّع على الأيام الباقية لحد الامتحان.</p>' : '<p class="note">هتظهر هنا لما تضيف امتحان وتدخل دروس المنهج.</p>';
+  h += sec('plan', 'المطلوب من المنهج', pl.length ? ar(pl.length) + ' مادة النهارده' : 'مفيش حاجة دلوقتي', pb);
+  var rb = rv.length ? rv.slice(0, 6).map(function (r) { return '<div class="row"><button class="check" type="button" data-a="rvdone" data-v="' + r.l.id + '" data-s="' + esc(r.sub) + '" aria-pressed="false" aria-label="راجعت"></button><div class="grow"><b>' + esc(r.l.t) + '</b><small>' + esc(r.sub) + ' · ' + (r.st === 0 ? 'مراجعة بعد يوم' : 'مراجعة بعد أسبوع') + '</small></div></div>'; }).join('') + (rv.length > 6 ? '<p class="note">وفيه ' + ar(rv.length - 6) + ' كمان في تبويب المنهج.</p>' : '') : '<p class="note">مفيش مراجعات مستنياك.</p>';
+  h += sec('rev', 'وقت المراجعة', rv.length ? ar(rv.length) + ' درس مستني مراجعة' : 'مفيش مراجعات', rb);
+  h += sec('tasks', 'جدول النهارده', tl.length ? ar(dn) + ' من ' + ar(tl.length) + ' خلصوا' : 'فاضي', taskList(tl, 'ضيف أول مادة في الجدول.') + '<button class="btn" type="button" data-a="tab" data-v="plan">ضيف حصة مذاكرة</button>');
+  h += sec('subs', 'موادك', ar(subs.length) + ' مواد', subs.map(function (sb) { var p = progress(sb); return '<div class="sp"><span>' + esc(sb) + '</span><b>' + (p.total ? ar(p.pct) + '٪' : '-') + '</b></div>' + bar(p.pct); }).join(''));
+  h += sec('more', 'السلسلة والإحصائيات', 'رتبتك والتقرير الأسبوعي', '<button class="btn sec" type="button" data-a="gosub" data-v="streak">السلسلة والتقرير</button> <button class="btn sec" type="button" data-a="gosub" data-v="stats">إحصائياتي</button> <button class="btn sec" type="button" data-a="tab" data-v="timer">مؤقت التركيز</button>');
   return h;
 }
 function viewPlan(subs) {
@@ -118,6 +114,10 @@ function viewTimer(subs) {
   return h;
 }
 function sw(name, on) { return '<button type="button" class="sw" role="switch" data-a="' + name + '" aria-checked="' + on + '"><i></i></button>'; }
+function viewTheme() {
+  var cur = (S.settings && S.settings.theme) || 'classic';
+  return '<section class="card lift"><h2>المظهر</h2><p class="note">اختار اللون اللي مريحك. التغيير فوري ومتحفوظ.</p><div class="themes">' + THEMES.map(function (t) { return '<button class="themeb" type="button" data-a="theme" data-v="' + t[0] + '" aria-pressed="' + (t[0] === cur) + '"><i><s style="background:' + t[2][0] + '"></s><s style="background:' + t[2][1] + '"></s><s style="background:' + t[2][2] + '"></s></i><span>' + t[1] + '</span></button>'; }).join('') + '</div></section>';
+}
 function viewSettings() {
   var st = S.settings, A = window.Android, ok = !!(A && A.sync), n = ok && A.notifOk && A.notifOk(), u = ok && A.usageOk && A.usageOk();
   var h = '<section class="card lift"><h2>الأذونات</h2>';
@@ -269,11 +269,11 @@ function viewMist(subs) {
   h += '<section class="card"><h2>آخر التسجيلات</h2>' + (S.mist.length ? S.mist.slice().reverse().slice(0, 10).map(function (m) { return '<div class="row"><div class="grow"><b>' + esc(m.lesson) + '</b><small>' + esc(m.sub) + ' · ' + ar(m.n) + ' غلطة · ' + esc(m.at) + '</small></div><button class="del" type="button" data-a="mdel" data-v="' + m.id + '">مسح</button></div>'; }).join('') : '<p class="note">فاضي.</p>') + '</section>';
   return h;
 }
-var MORE = [['exams2', 'stats', 'إحصائياتي', 'ساعات المذاكرة والأيام المتتالية'], ['n', 'notes', 'دفتر الأسئلة', 'اللي مفهمتوش وراجعه قبل الامتحان'], ['b', 'backup', 'نسخة احتياطية', 'تصدير واسترجاع بياناتك'], ['s', 'settings', 'الإعدادات والتنبيهات', 'الأذونات والتذكيرات'], ['r', 'rem', 'تذكيرات المواد', 'ميعاد التذكير والتكرار لحد ما تذاكر'], ['k', 'streak', 'السلسلة والهدف والتقرير', 'رتبتك والجوكر والتقرير الأسبوعي'], ['m', 'mist', 'سجل أخطاء الامتحانات', 'الدروس اللي غلطت فيها ترجع للمراجعة'], ['f', 'feedback', 'اقتراحات وشكاوى', 'قولنا رأيك']];
+var MORE = [['exams2', 'stats', 'إحصائياتي', 'ساعات المذاكرة والأيام المتتالية'], ['n', 'notes', 'دفتر الأسئلة', 'اللي مفهمتوش وراجعه قبل الامتحان'], ['b', 'backup', 'نسخة احتياطية', 'تصدير واسترجاع بياناتك'], ['s', 'settings', 'الإعدادات والتنبيهات', 'الأذونات والتذكيرات'], ['r', 'rem', 'تذكيرات المواد', 'ميعاد التذكير والتكرار لحد ما تذاكر'], ['k', 'streak', 'السلسلة والهدف والتقرير', 'رتبتك والجوكر والتقرير الأسبوعي'], ['t', 'theme', 'المظهر', 'فاتح، داكن، وألوان تانية'], ['m', 'mist', 'سجل أخطاء الامتحانات', 'الدروس اللي غلطت فيها ترجع للمراجعة'], ['f', 'feedback', 'اقتراحات وشكاوى', 'قولنا رأيك']];
 function viewMore(subs) {
   if (!U.sub) return '<section class="card lift"><h2>المزيد</h2>' + MORE.map(function (m) { return '<button class="menu" type="button" data-a="gosub" data-v="' + m[1] + '"><b>' + m[2] + '</b><small>' + m[3] + '</small></button>'; }).join('') + '</section>';
   var back = '<button class="pill dark" type="button" data-a="gosub" data-v="">رجوع للمزيد</button>';
-  var body = U.sub === 'stats' ? viewStats() : U.sub === 'notes' ? viewNotes(subs) : U.sub === 'backup' ? viewBackup() : U.sub === 'feedback' ? viewFeedback() : U.sub === 'rem' ? viewRem(subs) : U.sub === 'mist' ? viewMist(subs) : U.sub === 'streak' ? viewStreak() : viewSettings();
+  var body = U.sub === 'stats' ? viewStats() : U.sub === 'notes' ? viewNotes(subs) : U.sub === 'backup' ? viewBackup() : U.sub === 'feedback' ? viewFeedback() : U.sub === 'rem' ? viewRem(subs) : U.sub === 'mist' ? viewMist(subs) : U.sub === 'streak' ? viewStreak() : U.sub === 'theme' ? viewTheme() : viewSettings();
   return '<div class="backrow">' + back + '</div>' + body;
 }
 function render() {
@@ -317,6 +317,7 @@ function restore(d) {
   if (d.settings) S.settings = d.settings; else S.settings = keep;
   ['study', 'exam', 'focus', 'usage', 'dnd', 'alarm'].forEach(function (k) { if (!S.settings[k]) S.settings[k] = keep[k]; });
   S.lessons = S.lessons || {}; S.notes = S.notes || []; S.mist = S.mist || []; S.rem = S.rem || []; S.smins = S.smins || {}; S.stop = S.stop || {}; S.jk = (S.jk && typeof S.jk === 'object') ? S.jk : {}; S.mg = (S.mg && typeof S.mg === 'object') ? S.mg : {}; S.mins = S.mins || {}; S.exams = S.exams || []; S.tasks = S.tasks || [];
+  applyTheme();
   save();
 }
 document.addEventListener('change', function (e) {
@@ -350,6 +351,9 @@ document.addEventListener('click', function (e) {
   else if (a === 'se') { s.elective = v; S.profile.electives = S.profile.electives || {}; S.profile.electives[s.track] = v; save(); }
   else if (a === 'start') { if (setupReady(s)) { U.anim = 'in-up'; U.tab = 'home'; S.profile = { grade: s.grade, track: s.track, elective: s.elective, electives: S.profile.electives || {}, custom: S.profile.custom || [] }; U.editing = false; save(); } }
   else if (a === 'edit') { U.anim = 'in-up'; U.setup = { grade: S.profile.grade, track: S.profile.track, elective: S.profile.elective }; U.editing = true; }
+  else if (a === 'theme') { S.settings.theme = v; save(); applyTheme(); }
+  else if (a === 'tog') { U.open = U.open || {}; U.open[v] = !U.open[v]; }
+  else if (a === 'startsub') { U.fsub = v; U.anim = 'in-next'; U.tab = 'timer'; U.sub = ''; window.scrollTo(0, 0); }
   else if (a === 'tab') { if (v !== U.tab) { U.anim = ti(v) > ti(U.tab) ? 'in-next' : 'in-prev'; U.tab = v; U.sub = ''; U.pend = null; U.bmsg = ''; U.msg = ''; window.scrollTo(0, 0); } }
   else if (a === 'pd') U.day = v;
   else if (a === 'ps') U.subj = v;
