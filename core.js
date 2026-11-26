@@ -14,12 +14,12 @@ var FOCUS = [25, 45, 60];
 
 // ===== الحفظ على الموبايل =====
 var KEY = 'egy-bac-study.v1';
-var S = { settings: { study: { on: false, t: '17:00' }, exam: { on: true }, focus: { on: true }, usage: { on: false, h: 4 }, dnd: { on: false }, alarm: { on: true } }, sess: {}, profile: { grade: '', track: '', elective: '', electives: {}, custom: [] }, tasks: [], exams: [], mins: {}, lessons: {}, notes: [], mist: [], rem: [], smins: {}, stop: {}, jk: {}, mg: {} };
-var APP_VERSION = '1.2.0';
+var S = { settings: { study: { on: false, t: '17:00' }, exam: { on: true }, focus: { on: true }, usage: { on: false, h: 4 }, dnd: { on: false }, alarm: { on: true } }, sess: {}, profile: { grade: '', track: '', elective: '', electives: {}, custom: [] }, tasks: [], exams: [], mins: {}, lessons: {}, notes: [], mist: [], rem: [], smins: {}, stop: {}, jk: {}, mg: {}, papers: [], auto: { b: 90 }, todos: [] };
+var APP_VERSION = '1.2.1';
 // عنوان استقبال الاقتراحات والشكاوى
 var FEEDBACK_TO = 'mimoprograming847@gmail.com';
 try { var saved = JSON.parse(localStorage.getItem(KEY)); if (saved) { for (var k in S) if (saved[k] !== undefined) S[k] = saved[k]; } } catch (e) {}
-S.lessons = (S.lessons && typeof S.lessons === 'object') ? S.lessons : {}; S.notes = Array.isArray(S.notes) ? S.notes : []; S.mist = Array.isArray(S.mist) ? S.mist : []; S.rem = Array.isArray(S.rem) ? S.rem : []; S.smins = S.smins || {}; S.stop = S.stop || {}; S.jk = (S.jk && typeof S.jk === 'object') ? S.jk : {}; S.mg = (S.mg && typeof S.mg === 'object') ? S.mg : {}; S.mins = S.mins || {}; S.exams = S.exams || []; S.tasks = S.tasks || [];
+S.lessons = (S.lessons && typeof S.lessons === 'object') ? S.lessons : {}; S.notes = Array.isArray(S.notes) ? S.notes : []; S.mist = Array.isArray(S.mist) ? S.mist : []; S.rem = Array.isArray(S.rem) ? S.rem : []; S.smins = S.smins || {}; S.stop = S.stop || {}; S.jk = (S.jk && typeof S.jk === 'object') ? S.jk : {}; S.mg = (S.mg && typeof S.mg === 'object') ? S.mg : {}; S.papers = Array.isArray(S.papers) ? S.papers : []; S.todos = Array.isArray(S.todos) ? S.todos : []; S.auto = (S.auto && typeof S.auto === 'object') ? S.auto : { b: 90 }; S.mins = S.mins || {}; S.exams = S.exams || []; S.tasks = S.tasks || [];
 S.settings = S.settings || {}; ['study', 'exam', 'focus', 'usage', 'dnd', 'alarm'].forEach(function (k) { if (!S.settings[k]) S.settings[k] = { study: { on: false, t: '17:00' }, exam: { on: true }, focus: { on: true }, usage: { on: false, h: 4 }, dnd: { on: false }, alarm: { on: true } }[k]; });
 var THEMES = [['classic', 'كلاسيك', ['#1f3a33', '#faf6f0', '#b0702f']], ['light', 'فاتح', ['#26485a', '#f6f8fa', '#2f7f86']], ['dark', 'داكن', ['#1d3530', '#12161a', '#c98a4b']], ['sea', 'بحري', ['#12394a', '#f1f6f7', '#2a8c99']], ['rose', 'ورد هادئ', ['#4a2c33', '#fbf3f2', '#b0702f']], ['auto', 'حسب الجهاز', ['#1f3a33', '#12161a', '#c98a4b']]];
 function themeNow() { var t = (S.settings && S.settings.theme) || 'classic'; if (t === 'auto') { try { t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'classic'; } catch (e) { t = 'classic'; } } return t; }
@@ -84,7 +84,7 @@ function askPerm() {
 function regPeriodic() { try { navigator.serviceWorker.ready.then(function (r) { if (r.periodicSync) r.periodicSync.register('mz-check', { minInterval: 6 * 3600 * 1000 }).catch(function () {}); }); } catch (e) {} }
 
 // ===== حالة مؤقتة (مش بتتحفظ) =====
-var U = { fsub: '', msub: '', mlesson: '', mcount: '1', mtext: '', rsub: '', rkind: 'study', rtime: '17:00', runtil: '22:00', rrep: '0', tab: 'home', anim: '', editing: false, setup: { grade: '', track: '', elective: '' }, day: String(new Date().getDay()), subj: '', dur: '60', exSubj: '', exDate: '', extra: '', msg: '', sub: '', ssub: '', lessonText: '', bulkN: '', nsub: '', noteText: '', nfilter: 'open', fbKind: 'suggestion', fbText: '', bkText: '', pend: null, bmsg: '' };
+var U = { fsub: '', msub: '', mlesson: '', mcount: '1', mtext: '', rsub: '', rkind: 'study', rtime: '17:00', runtil: '22:00', rrep: '0', tab: 'home', anim: '', editing: false, setup: { grade: '', track: '', elective: '' }, day: String(new Date().getDay()), subj: '', dur: '60', exSubj: '', exDate: '', extra: '', msg: '', sub: '', ssub: '', lessonText: '', bulkN: '', nsub: '', noteText: '', nfilter: 'open', fbKind: 'suggestion', fbText: '', bkText: '', psub: '', todoText: '', pscore: '', pmax: '100', pdate: '', pend: null, bmsg: '' };
 var T = { sub: '', mode: 'focus', blen: 5, len: 25, left: 25 * 60, running: false, end: 0, finished: false, id: null };
 
 // ===== أدوات =====
@@ -277,3 +277,42 @@ function chips(name, opts, val) {
 }
 function subjOpts(list) { return list.map(function (s) { return [s, s]; }); }
 
+
+// ===== اختبارات سابقة =====
+function pct(p) { return p.max > 0 ? Math.round(p.score * 100 / p.max) : 0; }
+function papersOf(sub) { return S.papers.filter(function (p) { return p.sub === sub; }).sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id; }); }
+function paperTrend(sub) {
+  var l = papersOf(sub); if (!l.length) return null;
+  var last = pct(l[l.length - 1]), prev = l.slice(0, -1), avg = Math.round(l.reduce(function (s, p) { return s + pct(p); }, 0) / l.length);
+  var diff = prev.length ? last - Math.round(prev.reduce(function (s, p) { return s + pct(p); }, 0) / prev.length) : 0;
+  return { n: l.length, last: last, avg: avg, diff: diff, list: l };
+}
+// ===== خطة الأسبوع التلقائية =====
+function autoPlan(b) {
+  var items = {}, rest = jkc().day, k, i;
+  function add(sub, n) { if (!items[sub]) items[sub] = { sub: sub, n: n }; items[sub].n = Math.min(items[sub].n, n); }
+  S.exams.forEach(function (e) { var n = daysUntil(e.date); if (n >= 0) add(e.subject, n); });
+  for (k in S.lessons) if (lessonsOf(k).some(function (l) { return l.weak && !l.done; })) add(k, 30);
+  var list = Object.keys(items).map(function (k2) {
+    var it = items[k2], ls = lessonsOf(k2).filter(function (l) { return !l.done; }), w = ls.length ? ls.reduce(function (s, l) { return s + (l.weak ? 2 : 1); }, 0) : 3;
+    it.weak = ls.filter(function (l) { return l.weak; }).length; it.w = (w + 2) * (8 / (Math.max(it.n, 1) + 3)); return it;
+  });
+  if (!list.length) return [];
+  var days = [], today = dkey(new Date());
+  for (i = 0; i < 7; i++) { var key = addDays(today, i), dw = dayOf(key); if (dw !== +rest) days.push({ i: i, key: key, dw: dw, cap: Math.max(1, Math.floor(b / 30)), used: 0, c: {} }); }
+  var total = days.reduce(function (s, d) { return s + d.cap; }, 0), sum = list.reduce(function (s, x) { return s + x.w; }, 0);
+  list.forEach(function (x) { x.k = Math.max(1, Math.round(total * x.w / sum)); });
+  while (list.reduce(function (s, x) { return s + x.k; }, 0) > total) { list.sort(function (a, c2) { return c2.k - a.k; }); if (list[0].k <= 1) break; list[0].k--; }
+  list.sort(function (a, c2) { return a.n - c2.n; });
+  var q = [], more = true, r = 0;
+  while (more) { more = false; list.forEach(function (x) { if (r < x.k) { q.push(x); more = true; } }); r++; }
+  q.forEach(function (x) {
+    var ok = days.filter(function (d) { return d.used < d.cap && (x.n === 0 ? d.i === 0 : d.i < x.n); });
+    if (!ok.length) return;
+    ok.sort(function (a, c2) { return ((a.c[x.sub] || 0) - (c2.c[x.sub] || 0)) || (a.used - c2.used) || (a.i - c2.i); });
+    var d = ok[0]; d.used++; d.c[x.sub] = (d.c[x.sub] || 0) + 1;
+  });
+  var out = [];
+  days.forEach(function (d) { for (var s in d.c) out.push({ day: d.dw, key: d.key, subject: s, minutes: d.c[s] * 30, weak: items[s].weak }); });
+  return out;
+}

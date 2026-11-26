@@ -57,20 +57,56 @@ function viewHome(subs) {
   var eb, es;
   if (nx) { var d = daysUntil(nx.date); es = (d === 0 ? 'امتحان ' + esc(nx.subject) + ' النهارده' : 'باقي ' + ar(d) + ' يوم على ' + esc(nx.subject)); eb = '<div class="count' + (d <= 3 ? ' urgent' : '') + '"><b>' + ar(d) + '</b><span>' + (d === 0 ? 'امتحان ' + esc(nx.subject) + ' النهارده' : 'يوم لحد امتحان ' + esc(nx.subject)) + '</span></div><button class="btn sec" type="button" data-a="tab" data-v="exams">كل الامتحانات</button>'; }
   else { es = 'مفيش ميعاد لسه'; eb = '<p class="note">ضيف أول ميعاد امتحان شامل وهيظهر هنا العدّاد.</p><button class="btn" type="button" data-a="tab" data-v="exams">ضيف ميعاد</button>'; }
-  h += sec('exam', 'الامتحانات الشاملة', es, eb);
+  var SC = {};
+  SC.exam = sec('exam', 'الامتحانات الشاملة', es, eb);
   var pb = pl.length ? pl.slice(0, 3).map(function (x) { return '<div class="row"><div class="days">' + ar(x.per) + '</div><div class="grow"><b>' + esc(x.e.subject) + '</b><small>' + esc(planLine(x)) + '</small></div></div>'; }).join('') + '<p class="note">متوزّع على الأيام الباقية لحد الامتحان.</p>' : '<p class="note">هتظهر هنا لما تضيف امتحان وتدخل دروس المنهج.</p>';
-  h += sec('plan', 'المطلوب من المنهج', pl.length ? ar(pl.length) + ' مادة النهارده' : 'مفيش حاجة دلوقتي', pb);
+  SC.plan = sec('plan', 'المطلوب من المنهج', pl.length ? ar(pl.length) + ' مادة النهارده' : 'مفيش حاجة دلوقتي', pb);
   var rb = rv.length ? rv.slice(0, 6).map(function (r) { return '<div class="row"><button class="check" type="button" data-a="rvdone" data-v="' + r.l.id + '" data-s="' + esc(r.sub) + '" aria-pressed="false" aria-label="راجعت"></button><div class="grow"><b>' + esc(r.l.t) + '</b><small>' + esc(r.sub) + ' · ' + (r.st === 0 ? 'مراجعة بعد يوم' : 'مراجعة بعد أسبوع') + '</small></div></div>'; }).join('') + (rv.length > 6 ? '<p class="note">وفيه ' + ar(rv.length - 6) + ' كمان في تبويب المنهج.</p>' : '') : '<p class="note">مفيش مراجعات مستنياك.</p>';
-  h += sec('rev', 'وقت المراجعة', rv.length ? ar(rv.length) + ' درس مستني مراجعة' : 'مفيش مراجعات', rb);
-  h += sec('tasks', 'جدول النهارده', tl.length ? ar(dn) + ' من ' + ar(tl.length) + ' خلصوا' : 'فاضي', taskList(tl, 'ضيف أول مادة في الجدول.') + '<button class="btn" type="button" data-a="tab" data-v="plan">ضيف حصة مذاكرة</button>');
-  h += sec('subs', 'موادك', ar(subs.length) + ' مواد', subs.map(function (sb) { var p = progress(sb); return '<div class="sp"><span>' + esc(sb) + '</span><b>' + (p.total ? ar(p.pct) + '٪' : '-') + '</b></div>' + bar(p.pct); }).join(''));
-  h += sec('more', 'السلسلة والإحصائيات', 'رتبتك والتقرير الأسبوعي', '<button class="btn sec" type="button" data-a="gosub" data-v="streak">السلسلة والتقرير</button> <button class="btn sec" type="button" data-a="gosub" data-v="stats">إحصائياتي</button> <button class="btn sec" type="button" data-a="tab" data-v="timer">مؤقت التركيز</button>');
+  SC.rev = sec('rev', 'وقت المراجعة', rv.length ? ar(rv.length) + ' درس مستني مراجعة' : 'مفيش مراجعات', rb);
+  SC.tasks = sec('tasks', 'جدول النهارده', tl.length ? ar(dn) + ' من ' + ar(tl.length) + ' خلصوا' : 'فاضي', taskList(tl, 'ضيف أول مادة في الجدول.') + '<button class="btn" type="button" data-a="tab" data-v="plan">ضيف حصة مذاكرة</button>');
+  SC.subs = sec('subs', 'موادك', ar(subs.length) + ' مواد', subs.map(function (sb) { var p = progress(sb); return '<div class="sp"><span>' + esc(sb) + '</span><b>' + (p.total ? ar(p.pct) + '٪' : '-') + '</b></div>' + bar(p.pct); }).join(''));
+  SC.more = sec('more', 'السلسلة والإحصائيات', 'رتبتك والتقرير الأسبوعي', '<button class="btn sec" type="button" data-a="gosub" data-v="streak">السلسلة والتقرير</button> <button class="btn sec" type="button" data-a="gosub" data-v="stats">إحصائياتي</button> <button class="btn sec" type="button" data-a="tab" data-v="timer">مؤقت التركيز</button>');
+  var zo = S.todos.filter(function (x) { return !x.done; }), zd = S.todos.filter(function (x) { return x.done; });
+  var zb = '<div class="custom"><input type="text" id="todot" placeholder="مهمة جديدة" value="' + esc(U.todoText) + '"><button class="btn sec" type="button" data-a="zadd">ضيف</button></div>' + (S.todos.length ? '' : '<p class="note">اكتب أي حاجة لازم تتعمل، مش لازم تبقى مذاكرة.</p>') + zo.concat(zd).map(function (x) { return '<div class="row"><button class="check" type="button" data-a="zdone" data-v="' + x.id + '" aria-pressed="' + x.done + '" aria-label="خلصت">' + (x.done ? '✓' : '') + '</button><div class="grow' + (x.done ? ' done' : '') + '"><b>' + esc(x.t) + '</b></div><button class="del" type="button" data-a="zdel" data-v="' + x.id + '">مسح</button></div>'; }).join('') + (zd.length ? '<button class="btn ghost" type="button" data-a="zclear">امسح اللي خلص</button>' : '');
+  SC.todo = sec('todo', 'قائمة المهام', S.todos.length ? ar(zo.length) + ' لسه من ' + ar(S.todos.length) : 'فاضية', zb);
+  h += ['tasks', 'todo', 'rev', 'exam', 'plan', 'subs', 'more'].map(function (k) { return SC[k]; }).join('');
+  return h;
+}
+
+function viewAuto() {
+  var b = S.auto.b || 90, ap = autoPlan(b), h = '<section class="card lift"><h2>خطة الأسبوع التلقائية</h2><p class="note">من مواعيد امتحاناتك والدروس الباقية (ونقط الضعف بتاخد وقت أكتر).</p><div class="label">هتذاكر كام في اليوم؟</div>' + chips('ab', [60, 90, 120, 180].map(function (m) { return [String(m), fmtMin(m)]; }), String(b));
+  if (!ap.length) h += '<p class="note">ضيف ميعاد امتحان شامل أو علّم دروس «ضعيف» وهتظهر الخطة هنا.</p>';
+  else {
+    var by = {}; ap.forEach(function (x) { (by[x.key] = by[x.key] || []).push(x); });
+    Object.keys(by).sort().forEach(function (k) { var dn = DAYS.filter(function (d) { return d.id === by[k][0].day; })[0].n; h += '<div class="aday"><b>' + dn + (k === dkey(new Date()) ? ' (النهارده)' : '') + '</b><span>' + by[k].map(function (x) { return esc(x.subject) + ' ' + ar(x.minutes) + 'د'; }).join(' · ') + '</span></div>'; });
+    h += '<div class="actions"><button class="btn" type="button" data-a="aapply">حطها في جدولي</button>' + (S.tasks.some(function (t) { return t.auto; }) ? '<button class="btn ghost" type="button" data-a="aclear">امسح الخطة القديمة</button>' : '') + '</div>';
+  }
+  if (U.msg) h += '<div class="callout pop">' + esc(U.msg) + '</div>';
+  return h + '</section>';
+}
+function spark(l) {
+  var w = 120, hh = 34, n = l.length, lo = Math.min.apply(null, l.map(pct)), hi = Math.max.apply(null, l.map(pct)), sp = Math.max(hi - lo, 10), pts = l.map(function (p, i) { return (n === 1 ? w / 2 : 4 + i * (w - 8) / (n - 1)).toFixed(1) + ',' + (hh - 4 - (pct(p) - lo) * (hh - 8) / sp).toFixed(1); });
+  return '<svg class="spark" viewBox="0 0 ' + w + ' ' + hh + '" aria-hidden="true">' + (n > 1 ? '<polyline points="' + pts.join(' ') + '" fill="none" stroke="var(--copper)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' : '') + pts.map(function (q) { var z = q.split(','); return '<circle cx="' + z[0] + '" cy="' + z[1] + '" r="2.6" fill="var(--copper)"/>'; }).join('') + '</svg>';
+}
+function viewPapers(subs) {
+  if (subs.indexOf(U.psub) < 0) U.psub = subs[0];
+  var h = '<section class="card lift"><h2>اختبارات سابقة</h2><p class="note">سجّل درجة كل اختبار أو امتحان تجريبي وشوف اتجاهك لكل مادة.</p><div class="label">المادة</div>' + chips('pps', subjOpts(subs), U.psub) +
+    '<div class="label">درجتك</div><div class="custom"><input type="number" id="pscore" inputmode="decimal" min="0" placeholder="الدرجة" value="' + esc(U.pscore) + '"><input type="number" id="pmax" inputmode="decimal" min="1" placeholder="من كام" value="' + esc(U.pmax) + '"></div>' +
+    '<div class="label">التاريخ (اختياري، النهارده لو سبته فاضي)</div><input type="date" id="pdate" value="' + esc(U.pdate) + '"><button class="btn" type="button" data-a="padd">سجّل الدرجة</button>' + (U.msg ? '<div class="callout pop">' + esc(U.msg) + '</div>' : '') + '</section>';
+  var any = false;
+  subs.forEach(function (sb) {
+    var t = paperTrend(sb); if (!t) return; any = true;
+    h += '<section class="card"><div class="sp"><span><b>' + esc(sb) + '</b></span><b>' + ar(t.last) + '٪ آخر درجة</b></div><div class="trend">' + spark(t.list) + '<div><small>' + ar(t.n) + ' اختبار، المتوسط ' + ar(t.avg) + '٪</small>' + (t.n > 1 ? '<small class="' + (t.diff >= 0 ? 'up' : 'down') + '">' + (t.diff >= 0 ? '▲ أحسن بـ ' : '▼ أقل بـ ') + ar(Math.abs(t.diff)) + '٪ من متوسط اللي قبله</small>' : '') + '</div></div>';
+    t.list.slice().reverse().forEach(function (p) { h += '<div class="row"><div class="grow"><b>' + ar(p.score) + ' من ' + ar(p.max) + '</b><small>' + esc(p.date) + '</small></div><b class="pcb">' + ar(pct(p)) + '٪</b><button class="del" type="button" data-a="pdel" data-v="' + p.id + '">مسح</button></div>'; });
+    h += '</section>';
+  });
+  if (!any) h += '<section class="card"><p class="note">لسه ماسجلتش أي درجة.</p></section>';
   return h;
 }
 function viewPlan(subs) {
   var today = new Date().getDay();
   if (subs.indexOf(U.subj) < 0) U.subj = subs[0];
-  var h = '<section class="card lift"><h2>ضيف حصة مذاكرة</h2><div class="label">اليوم</div>' + chips('pd', DAYS.map(function (d) { return [String(d.id), d.n]; }), U.day);
+  var h = viewAuto() + '<section class="card"><h2>ضيف حصة مذاكرة</h2><div class="label">اليوم</div>' + chips('pd', DAYS.map(function (d) { return [String(d.id), d.n]; }), U.day);
   h += '<div class="label">المادة</div>' + chips('ps', subjOpts(subs), U.subj);
   h += '<div class="label">المدة</div>' + chips('pm', [30, 60, 90, 120].map(function (m) { return [String(m), ar(m) + ' دقيقة']; }), U.dur);
   h += '<button class="btn" type="button" data-a="tadd">ضيف للجدول</button></section><section class="card"><h2>الأسبوع كله</h2>';
@@ -180,10 +216,12 @@ function viewSyl(subs) {
       return '<div class="row"><button class="check" type="button" data-a="rvdone" data-v="' + r.l.id + '" data-s="' + esc(r.sub) + '" aria-pressed="false" aria-label="راجعت"></button><div class="grow"><b>' + esc(r.l.t) + '</b><small>' + esc(r.sub) + ' · ' + (r.st === 0 ? 'مراجعة بعد يوم' : 'مراجعة بعد أسبوع') + '</small></div></div>';
     }).join('') + '</section>';
   }
+  var wk = []; subs.forEach(function (x) { lessonsOf(x).forEach(function (l) { if (l.weak && !l.done) wk.push({ s: x, l: l }); }); });
+  if (wk.length) h += '<section class="card"><h2>نقط ضعف (' + ar(wk.length) + ')</h2><p class="note">الخطة التلقائية بتدّيها وقت أكتر.</p>' + wk.map(function (x) { return '<div class="row"><div class="grow"><b>' + esc(x.l.t) + '</b><small>' + esc(x.s) + '</small></div></div>'; }).join('') + '</section>';
   h += '<section class="card"><h2>دروس المادة</h2>' + chips('ys', subjOpts(subs), sb);
   h += '<div class="label">' + (list.length ? ar(p.done) + ' من ' + ar(list.length) + ' اتخلصوا' : 'ضيف دروس المادة دي') + '</div>' + (list.length ? bar(p.pct) : '');
   list.forEach(function (l) {
-    h += '<div class="row"><button class="check" type="button" data-a="ldone" data-v="' + l.id + '" aria-pressed="' + !!l.done + '" aria-label="خلصت">' + (l.done ? '✓' : '') + '</button><div class="grow' + (l.done ? ' done' : '') + '"><b>' + esc(l.t) + '</b>' + (l.done && l.at ? '<small>اتخلص ' + esc(l.at) + '</small>' : '') + '</div><button class="del" type="button" data-a="ldel" data-v="' + l.id + '">مسح</button></div>';
+    h += '<div class="row"><button class="check" type="button" data-a="ldone" data-v="' + l.id + '" aria-pressed="' + !!l.done + '" aria-label="خلصت">' + (l.done ? '✓' : '') + '</button><div class="grow' + (l.done ? ' done' : '') + '"><b>' + esc(l.t) + '</b>' + (l.done && l.at ? '<small>اتخلص ' + esc(l.at) + '</small>' : '') + '</div><button class="weakb" type="button" data-a="lweak" data-v="' + l.id + '" aria-pressed="' + !!l.weak + '">ضعيف</button><button class="del" type="button" data-a="ldel" data-v="' + l.id + '">مسح</button></div>';
   });
   h += '<div class="label">درس جديد</div><div class="custom"><input type="text" id="lesson" placeholder="اسم الدرس" value="' + esc(U.lessonText) + '"><button class="btn sec" type="button" data-a="ladd">ضيف</button></div>' +
     '<div class="label">أو ضيف كذا درس مرة واحدة (هيتسموا درس ١، درس ٢...)</div><div class="custom"><input type="number" id="bulk" inputmode="numeric" min="1" max="100" placeholder="عدد الدروس" value="' + esc(U.bulkN) + '"><button class="btn sec" type="button" data-a="lbulk">ضيف</button></div></section>';
@@ -269,11 +307,11 @@ function viewMist(subs) {
   h += '<section class="card"><h2>آخر التسجيلات</h2>' + (S.mist.length ? S.mist.slice().reverse().slice(0, 10).map(function (m) { return '<div class="row"><div class="grow"><b>' + esc(m.lesson) + '</b><small>' + esc(m.sub) + ' · ' + ar(m.n) + ' غلطة · ' + esc(m.at) + '</small></div><button class="del" type="button" data-a="mdel" data-v="' + m.id + '">مسح</button></div>'; }).join('') : '<p class="note">فاضي.</p>') + '</section>';
   return h;
 }
-var MORE = [['exams2', 'stats', 'إحصائياتي', 'ساعات المذاكرة والأيام المتتالية'], ['n', 'notes', 'دفتر الأسئلة', 'اللي مفهمتوش وراجعه قبل الامتحان'], ['b', 'backup', 'نسخة احتياطية', 'تصدير واسترجاع بياناتك'], ['s', 'settings', 'الإعدادات والتنبيهات', 'الأذونات والتذكيرات'], ['r', 'rem', 'تذكيرات المواد', 'ميعاد التذكير والتكرار لحد ما تذاكر'], ['k', 'streak', 'السلسلة والهدف والتقرير', 'رتبتك والجوكر والتقرير الأسبوعي'], ['t', 'theme', 'المظهر', 'فاتح، داكن، وألوان تانية'], ['m', 'mist', 'سجل أخطاء الامتحانات', 'الدروس اللي غلطت فيها ترجع للمراجعة'], ['f', 'feedback', 'اقتراحات وشكاوى', 'قولنا رأيك']];
+var MORE = [['pp', 'papers', 'اختبارات سابقة', 'درجاتك واتجاهها لكل مادة'], ['exams2', 'stats', 'إحصائياتي', 'ساعات المذاكرة والأيام المتتالية'], ['n', 'notes', 'دفتر الأسئلة', 'اللي مفهمتوش وراجعه قبل الامتحان'], ['b', 'backup', 'نسخة احتياطية', 'تصدير واسترجاع بياناتك'], ['s', 'settings', 'الإعدادات والتنبيهات', 'الأذونات والتذكيرات'], ['r', 'rem', 'تذكيرات المواد', 'ميعاد التذكير والتكرار لحد ما تذاكر'], ['k', 'streak', 'السلسلة والهدف والتقرير', 'رتبتك والجوكر والتقرير الأسبوعي'], ['t', 'theme', 'المظهر', 'فاتح، داكن، وألوان تانية'], ['m', 'mist', 'سجل أخطاء الامتحانات', 'الدروس اللي غلطت فيها ترجع للمراجعة'], ['f', 'feedback', 'اقتراحات وشكاوى', 'قولنا رأيك']];
 function viewMore(subs) {
   if (!U.sub) return '<section class="card lift"><h2>المزيد</h2>' + MORE.map(function (m) { return '<button class="menu" type="button" data-a="gosub" data-v="' + m[1] + '"><b>' + m[2] + '</b><small>' + m[3] + '</small></button>'; }).join('') + '</section>';
   var back = '<button class="pill dark" type="button" data-a="gosub" data-v="">رجوع للمزيد</button>';
-  var body = U.sub === 'stats' ? viewStats() : U.sub === 'notes' ? viewNotes(subs) : U.sub === 'backup' ? viewBackup() : U.sub === 'feedback' ? viewFeedback() : U.sub === 'rem' ? viewRem(subs) : U.sub === 'mist' ? viewMist(subs) : U.sub === 'streak' ? viewStreak() : U.sub === 'theme' ? viewTheme() : viewSettings();
+  var body = U.sub === 'stats' ? viewStats() : U.sub === 'notes' ? viewNotes(subs) : U.sub === 'backup' ? viewBackup() : U.sub === 'feedback' ? viewFeedback() : U.sub === 'rem' ? viewRem(subs) : U.sub === 'mist' ? viewMist(subs) : U.sub === 'streak' ? viewStreak() : U.sub === 'papers' ? viewPapers(subs) : U.sub === 'theme' ? viewTheme() : viewSettings();
   return '<div class="backrow">' + back + '</div>' + body;
 }
 function render() {
@@ -313,10 +351,11 @@ function tick() {
 }
 function restore(d) {
   var keep = S.settings;
-  ['profile', 'tasks', 'exams', 'mins', 'sess', 'lessons', 'notes', 'mist', 'rem', 'smins', 'jk', 'mg'].forEach(function (k) { if (d[k] !== undefined) S[k] = d[k]; });
+  ['profile', 'tasks', 'exams', 'mins', 'sess', 'lessons', 'notes', 'mist', 'rem', 'smins', 'jk', 'mg', 'papers', 'auto', 'todos'].forEach(function (k) { if (d[k] !== undefined) S[k] = d[k]; });
   if (d.settings) S.settings = d.settings; else S.settings = keep;
   ['study', 'exam', 'focus', 'usage', 'dnd', 'alarm'].forEach(function (k) { if (!S.settings[k]) S.settings[k] = keep[k]; });
   S.lessons = S.lessons || {}; S.notes = S.notes || []; S.mist = S.mist || []; S.rem = S.rem || []; S.smins = S.smins || {}; S.stop = S.stop || {}; S.jk = (S.jk && typeof S.jk === 'object') ? S.jk : {}; S.mg = (S.mg && typeof S.mg === 'object') ? S.mg : {}; S.mins = S.mins || {}; S.exams = S.exams || []; S.tasks = S.tasks || [];
+  S.papers = Array.isArray(S.papers) ? S.papers : []; S.todos = Array.isArray(S.todos) ? S.todos : []; S.auto = (S.auto && typeof S.auto === 'object') ? S.auto : { b: 90 };
   applyTheme();
   save();
 }
@@ -335,7 +374,7 @@ window.addEventListener('focus', function () { if (U.tab === 'more' && U.sub ===
 
 // ===== الضغطات =====
 document.addEventListener('input', function (e) {
-  var ids = { rtime: 'rtime', runtil: 'runtil', mtext: 'mtext', mcount: 'mcount', lesson: 'lessonText', bulk: 'bulkN', note: 'noteText', fbt: 'fbText', btext: 'bkText' };
+  var ids = { rtime: 'rtime', runtil: 'runtil', mtext: 'mtext', mcount: 'mcount', lesson: 'lessonText', bulk: 'bulkN', note: 'noteText', fbt: 'fbText', btext: 'bkText', pscore: 'pscore', pmax: 'pmax', pdate: 'pdate', todot: 'todoText' };
   if (ids[e.target.id]) U[ids[e.target.id]] = e.target.value;
   if (e.target.id === 'extra') U.extra = e.target.value;
   if (e.target.id === 'exdate') U.exDate = e.target.value;
@@ -421,6 +460,17 @@ document.addEventListener('click', function (e) {
   else if (a === 'lbulk') { var bn = Math.round(+U.bulkN); if (bn >= 1 && bn <= 100) { var bl = (S.lessons[U.ssub] = S.lessons[U.ssub] || []), st0 = bl.length; for (var q = 1; q <= bn; q++) bl.push({ id: Date.now() + q, t: 'درس ' + ar(st0 + q), done: false }); U.bulkN = ''; save(); } }
   else if (a === 'ldone') { lessonsOf(U.ssub).forEach(function (l) { if (String(l.id) === v) { l.done = !l.done; if (l.done) { l.at = dkey(new Date()); l.rs = 0; stopToday(U.ssub); } else { delete l.at; delete l.rs; } } }); save(); }
   else if (a === 'ldel') { S.lessons[U.ssub] = lessonsOf(U.ssub).filter(function (l) { return String(l.id) !== v; }); save(); }
+  else if (a === 'lweak') { lessonsOf(U.ssub).forEach(function (l) { if (String(l.id) === v) l.weak = !l.weak; }); save(); }
+  else if (a === 'ab') { S.auto.b = +v; save(); }
+  else if (a === 'aapply') { var ap = autoPlan(S.auto.b || 90); S.tasks = S.tasks.filter(function (t) { return !t.auto; }); ap.forEach(function (x, ix) { S.tasks.push({ id: Date.now() + ix, day: x.day, subject: x.subject, minutes: x.minutes, done: false, auto: true }); }); U.msg = 'اتحطت الخطة في جدولك.'; save(); setTimeout(function () { U.msg = ''; render(); }, 5000); }
+  else if (a === 'aclear') { S.tasks = S.tasks.filter(function (t) { return !t.auto; }); save(); }
+  else if (a === 'pps') U.psub = v;
+  else if (a === 'padd') { var psc = +U.pscore, pmx = +(U.pmax || 100), pdt = U.pdate || dkey(new Date()); if (U.pscore !== '' && psc >= 0 && pmx > 0 && psc <= pmx) { S.papers.push({ id: Date.now(), sub: U.psub, score: psc, max: pmx, date: pdt }); U.pscore = ''; U.msg = ''; save(); } else U.msg = 'اكتب درجة صحيحة (من صفر لحد الدرجة الكاملة).'; }
+  else if (a === 'pdel') { S.papers = S.papers.filter(function (p) { return String(p.id) !== v; }); save(); }
+  else if (a === 'zadd') { var zt = U.todoText.trim(); if (zt) { S.todos.push({ id: Date.now(), t: zt, done: false }); U.todoText = ''; save(); } }
+  else if (a === 'zdone') { S.todos.forEach(function (x) { if (String(x.id) === v) x.done = !x.done; }); save(); }
+  else if (a === 'zdel') { S.todos = S.todos.filter(function (x) { return String(x.id) !== v; }); save(); }
+  else if (a === 'zclear') { S.todos = S.todos.filter(function (x) { return !x.done; }); save(); }
   else if (a === 'rvdone') { lessonsOf(b.dataset.s).forEach(function (l) { if (String(l.id) === v) l.rs = (l.rs || 0) + 1; }); save(); }
   else if (a === 'ns') U.nsub = v;
   else if (a === 'nf') U.nfilter = v;
