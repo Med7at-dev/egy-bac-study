@@ -1,6 +1,6 @@
 // بيخزّن ملفات التطبيق عشان يشتغل من غير نت، وبيبعت التنبيهات
-const CACHE = 'egy-bac-study-v7';
-const FILES = ['./', './index.html', './style.css', './app.js', './manifest.webmanifest',
+const CACHE = 'egy-bac-study-v10';
+const FILES = ['./', './index.html', './style.css', './core.js', './app.js', './manifest.webmanifest',
   './icons/icon.svg'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
@@ -42,6 +42,15 @@ async function runCheck() {
         }
       }
     }
+  }
+  for (const ev of (cfg.rem || [])) {
+    const nowMs = now.getTime(); if (nowMs < ev.at) continue;
+    const day = new Date(ev.at), dk = day.getFullYear() + '-' + String(day.getMonth() + 1).padStart(2, '0') + '-' + String(day.getDate()).padStart(2, '0');
+    if (cfg.stop && cfg.stop[ev.subject] === dk) continue;
+    const rep = (ev.rep || 0) * 60000; let t = ev.at;
+    if (rep > 0) { if (nowMs > ev.until) continue; t = ev.at + Math.floor((nowMs - ev.at) / rep) * rep; } else if (nowMs - ev.at > 6 * 36e5) continue;
+    const k = 'rem-' + ev.subject + '-' + t;
+    if (!shown[k]) { await show(ev.title, ev.text, 'rem-' + ev.subject); mark(k); }
   }
   for (const k in shown) if (Date.now() - shown[k] > 30 * 864e5) { delete shown[k]; changed = true; }
   if (changed) await kvSet('shown', shown);

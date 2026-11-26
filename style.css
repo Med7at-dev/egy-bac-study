@@ -77,3 +77,33 @@ input[type=text], input[type=date], input[type=number], input[type=time] { font:
 .card .btn.sec { margin-top: 12px; }
 .okb { color: var(--green2); font-size: 13px; font-weight: 600; white-space: nowrap; }
 .btn.perm { margin-top: 0; min-height: 40px; padding: 4px 14px; font-size: 13px; }
+
+/* v1.2 */
+.bar { height: 10px; background: var(--line); border-radius: 6px; overflow: hidden; margin: 2px 0 10px; }
+.bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--copper), var(--copper2)); border-radius: 6px; transition: width .5s; }
+.sp { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.sp b { color: var(--copper); white-space: nowrap; font-weight: 600; }
+.count { display: flex; align-items: center; gap: 14px; padding: 4px 0 6px; }
+.count b { font-size: 56px; line-height: 1; font-weight: 300; color: var(--copper); min-width: 80px; text-align: center; }
+.count.urgent b { color: var(--red); }
+.count span { color: var(--green); font-weight: 600; }
+textarea { font: inherit; width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); resize: vertical; }
+input[type=file] { width: 100%; padding: 8px 0; font: inherit; }
+.menu { display: flex; flex-direction: column; align-items: flex-start; width: 100%; min-height: 60px; padding: 10px 14px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: 14px; background: #fff; text-align: right; transition: transform .15s; }
+.menu:active { transform: scale(.98); }
+.menu b { color: var(--green); } .menu small { color: var(--ink2); }
+.backrow { margin-bottom: 12px; }
+.pill.dark { background: var(--green); border-color: var(--green); color: #f6ecdc; }
+.chart { display: flex; align-items: flex-end; gap: 6px; height: 150px; margin-top: 18px; }
+.chart .col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; }
+.chart .col i { display: block; width: 70%; min-height: 3px; background: linear-gradient(180deg, var(--copper2), var(--copper)); border-radius: 6px 6px 2px 2px; transition: height .5s; }
+.chart .col span { font-size: 10px; color: var(--ink2); white-space: nowrap; }
+.chart .col em { font-size: 11px; font-style: normal; color: var(--copper); min-height: 16px; }
+.navb { font-size: 9.5px; }
+
+.tree { display: flex; justify-content: center; margin: 4px 0 0; } .tree svg { width: 150px; height: 122px; }
+.garden { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; } .garden .gt svg { width: 56px; height: 46px; }
+.heat { display: flex; gap: 4px; justify-content: center; direction: ltr; padding: 6px 0; }
+.hcol { display: flex; flex-direction: column; gap: 4px; }
+.hc { display: block; width: 18px; height: 18px; border-radius: 4px; background: #efe7da; }
+.hc.l0 { background: #efe7da; } .hc.l1 { background: #d9e3d4; } .hc.l2 { background: #a9c3a4; } .hc.l3 { background: #5f8d66; } .hc.l4 { background: #1f3a33; } .hc.lf { background: transparent; }
