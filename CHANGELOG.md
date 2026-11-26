@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.4
+- New app icon: check mark in a progress ring with a pencil. Also used for the site icon.
+
 ## 1.2.3
 - Subjects follow the official Baccalaureate decision: grade 2 core subjects + one track elective (picked automatically, swap it from the syllabus tab), plus Financial Culture; grade 3 track subjects + Religion.
 - Calmer syllabus screen: lesson actions hide behind a tap, filter (all / to do / done / weak), lessons grouped by unit, short subject chips with progress.

@@ -15,7 +15,7 @@ var FOCUS = [25, 45, 60];
 // ===== الحفظ على الموبايل =====
 var KEY = 'egy-bac-study.v1';
 var S = { settings: { study: { on: false, t: '17:00' }, exam: { on: true }, focus: { on: true }, usage: { on: false, h: 4 }, dnd: { on: false }, alarm: { on: true } }, sess: {}, profile: { grade: '', track: '', elective: '', electives: {}, custom: [] }, tasks: [], exams: [], mins: {}, lessons: {}, notes: [], mist: [], rem: [], smins: {}, stop: {}, jk: {}, mg: {}, papers: [], auto: { b: 90 }, todos: [] };
-var APP_VERSION = '1.2.3';
+var APP_VERSION = '1.2.4';
 // عنوان استقبال الاقتراحات والشكاوى
 var FEEDBACK_TO = 'mimoprograming847@gmail.com';
 try { var saved = JSON.parse(localStorage.getItem(KEY)); if (saved) { for (var k in S) if (saved[k] !== undefined) S[k] = saved[k]; } } catch (e) {}
