@@ -172,3 +172,8 @@ input[type=file] { width: 100%; padding: 8px 0; font: inherit; }
 :root[data-theme=dark] .up { color: #7fcf9d; } :root[data-theme=dark] .down { color: #e08a73; }
 .pcb { color: var(--copper); margin-inline: 12px; }
 @media (min-width: 768px) { .page { grid-auto-flow: dense; } }
+.mini { min-width: 36px; min-height: 36px; padding: 2px 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 10px; font-size: .8rem; opacity: .75; }
+.row.edit { flex-wrap: wrap; } .row.edit .grow { flex: 1 1 100%; } .eb { display: flex; gap: 8px; margin-top: 8px; }
+.row:has(.acts) { flex-wrap: wrap; }
+.row .acts { display: flex; gap: 6px; align-items: center; flex: 1 1 100%; flex-wrap: wrap; }
+.row .acts .del { margin-inline-start: auto; }

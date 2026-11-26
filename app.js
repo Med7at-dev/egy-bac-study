@@ -11,12 +11,21 @@ function viewSetup() {
   }
   return h;
 }
+function edRow(k, id, inner) { return '<div class="row edit"><div class="grow">' + inner + '</div><div class="eb"><button class="btn sec" type="button" data-a="esave">حفظ</button><button class="weakb" type="button" data-a="ecancel">إلغاء</button></div></div>'; }
+function isEd(k, id) { return U.ed && U.ed.k === k && String(U.ed.id) === String(id); }
+function mvb(p, id) { return '<button class="mini" type="button" data-a="' + p + 'up" data-v="' + id + '" aria-label="فوق">↑</button><button class="mini" type="button" data-a="' + p + 'dn" data-v="' + id + '" aria-label="تحت">↓</button><button class="mini" type="button" data-a="' + p + 'edit" data-v="' + id + '">تعديل</button>'; }
+function swapIn(arr, id, dir, same) {
+  var i = -1, j; arr.forEach(function (x, n) { if (String(x.id) === String(id)) i = n; }); if (i < 0) return;
+  for (j = i + dir; j >= 0 && j < arr.length; j += dir) if (!same || same(arr[i], arr[j])) { var t = arr[i]; arr[i] = arr[j]; arr[j] = t; return; }
+}
+function dueLabel(z) { if (!z.due) return ''; var n = daysUntil(z.due); return (n < 0 ? 'متأخرة ' + ar(-n) + ' يوم' : n === 0 ? 'النهارده' : n === 1 ? 'بكرة' : 'بعد ' + ar(n) + ' يوم') + ' · ' + z.due + (z.tm ? ' ' + z.tm : '') + (z.rm ? ' 🔔' : ''); }
 function taskList(list, empty) {
   if (!list.length) return '<p class="note">' + empty + '</p>';
   return list.map(function (t) {
+    if (isEd('t', t.id)) return edRow('t', t.id, '<div class="label">' + esc(t.subject) + ' · الدقايق</div><input type="number" id="edm" inputmode="numeric" min="5" max="600" value="' + esc(U.edM) + '">');
     return '<div class="row"><button class="check" type="button" data-a="tdone" data-v="' + t.id + '" aria-pressed="' + t.done + '" aria-label="خلصت">' + (t.done ? '✓' : '') + '</button>' +
-      '<div class="grow' + (t.done ? ' done' : '') + '"><b>' + esc(t.subject) + '</b><small>' + ar(t.minutes) + ' دقيقة</small></div>' +
-      '<button class="del" type="button" data-a="tdel" data-v="' + t.id + '">مسح</button></div>';
+      '<div class="grow' + (t.done ? ' done' : '') + '"><b>' + esc(t.subject) + '</b><small>' + ar(t.minutes) + ' دقيقة</small></div><div class="acts">' + mvb('t', t.id) +
+      '<button class="del" type="button" data-a="tdel" data-v="' + t.id + '">مسح</button></div></div>';
   }).join('');
 }
 
@@ -67,7 +76,11 @@ function viewHome(subs) {
   SC.subs = sec('subs', 'موادك', ar(subs.length) + ' مواد', subs.map(function (sb) { var p = progress(sb); return '<div class="sp"><span>' + esc(sb) + '</span><b>' + (p.total ? ar(p.pct) + '٪' : '-') + '</b></div>' + bar(p.pct); }).join(''));
   SC.more = sec('more', 'السلسلة والإحصائيات', 'رتبتك والتقرير الأسبوعي', '<button class="btn sec" type="button" data-a="gosub" data-v="streak">السلسلة والتقرير</button> <button class="btn sec" type="button" data-a="gosub" data-v="stats">إحصائياتي</button> <button class="btn sec" type="button" data-a="tab" data-v="timer">مؤقت التركيز</button>');
   var zo = S.todos.filter(function (x) { return !x.done; }), zd = S.todos.filter(function (x) { return x.done; });
-  var zb = '<div class="custom"><input type="text" id="todot" placeholder="مهمة جديدة" value="' + esc(U.todoText) + '"><button class="btn sec" type="button" data-a="zadd">ضيف</button></div>' + (S.todos.length ? '' : '<p class="note">اكتب أي حاجة لازم تتعمل، مش لازم تبقى مذاكرة.</p>') + zo.concat(zd).map(function (x) { return '<div class="row"><button class="check" type="button" data-a="zdone" data-v="' + x.id + '" aria-pressed="' + x.done + '" aria-label="خلصت">' + (x.done ? '✓' : '') + '</button><div class="grow' + (x.done ? ' done' : '') + '"><b>' + esc(x.t) + '</b></div><button class="del" type="button" data-a="zdel" data-v="' + x.id + '">مسح</button></div>'; }).join('') + (zd.length ? '<button class="btn ghost" type="button" data-a="zclear">امسح اللي خلص</button>' : '');
+  var zrow = function (x) {
+    if (isEd('z', x.id)) return edRow('z', x.id, '<input type="text" id="edt" value="' + esc(U.edT) + '"><div class="label">الميعاد (اختياري)</div><input type="date" id="edd" value="' + esc(U.edD) + '"><div class="label">الساعة (لو عايز تنبيه)</div><input type="time" id="edtm" value="' + esc(U.edTm) + '">');
+    return '<div class="row"><button class="check" type="button" data-a="zdone" data-v="' + x.id + '" aria-pressed="' + x.done + '" aria-label="خلصت">' + (x.done ? '✓' : '') + '</button><div class="grow' + (x.done ? ' done' : '') + '"><b>' + esc(x.t) + '</b>' + (x.due ? '<small' + (!x.done && daysUntil(x.due) < 0 ? ' style="color:var(--copper)"' : '') + '>' + esc(dueLabel(x)) + '</small>' : '') + '</div><div class="acts">' + mvb('z', x.id) + '<button class="del" type="button" data-a="zdel" data-v="' + x.id + '">مسح</button></div></div>';
+  };
+  var zb = '<div class="custom"><input type="text" id="todot" placeholder="مهمة جديدة" value="' + esc(U.todoText) + '"><button class="btn sec" type="button" data-a="zadd">ضيف</button></div><div class="label">ميعاد المهمة (اختياري)</div><div class="custom"><input type="date" id="zdue" value="' + esc(U.todoDue) + '"><input type="time" id="ztime" value="' + esc(U.todoTm) + '"></div><button class="weakb" type="button" data-a="zrem" aria-pressed="' + !!U.todoRem + '">🔔 نبّهني في الميعاد</button>' + (S.todos.length ? '' : '<p class="note">اكتب أي حاجة لازم تتعمل، مش لازم تبقى مذاكرة.</p>') + zo.concat(zd).map(zrow).join('') + (zd.length ? '<button class="btn ghost" type="button" data-a="zclear">امسح اللي خلص</button>' : '');
   SC.todo = sec('todo', 'قائمة المهام', S.todos.length ? ar(zo.length) + ' لسه من ' + ar(S.todos.length) : 'فاضية', zb);
   h += ['tasks', 'todo', 'rev', 'exam', 'plan', 'subs', 'more'].map(function (k) { return SC[k]; }).join('');
   return h;
@@ -221,8 +234,13 @@ function viewSyl(subs) {
   h += '<section class="card"><h2>دروس المادة</h2>' + chips('ys', subjOpts(subs), sb);
   h += '<div class="label">' + (list.length ? ar(p.done) + ' من ' + ar(list.length) + ' اتخلصوا' : 'ضيف دروس المادة دي') + '</div>' + (list.length ? bar(p.pct) : '');
   list.forEach(function (l) {
-    h += '<div class="row"><button class="check" type="button" data-a="ldone" data-v="' + l.id + '" aria-pressed="' + !!l.done + '" aria-label="خلصت">' + (l.done ? '✓' : '') + '</button><div class="grow' + (l.done ? ' done' : '') + '"><b>' + esc(l.t) + '</b>' + (l.done && l.at ? '<small>اتخلص ' + esc(l.at) + '</small>' : '') + '</div><button class="weakb" type="button" data-a="lweak" data-v="' + l.id + '" aria-pressed="' + !!l.weak + '">ضعيف</button><button class="del" type="button" data-a="ldel" data-v="' + l.id + '">مسح</button></div>';
+    if (isEd('l', l.id)) { h += edRow('l', l.id, '<input type="text" id="edt" value="' + esc(U.edT) + '">'); return; }
+    h += '<div class="row"><button class="check" type="button" data-a="ldone" data-v="' + l.id + '" aria-pressed="' + !!l.done + '" aria-label="خلصت">' + (l.done ? '✓' : '') + '</button><div class="grow' + (l.done ? ' done' : '') + '"><b>' + esc(l.t) + '</b>' + (l.done && l.at ? '<small>اتخلص ' + esc(l.at) + '</small>' : '') + '</div><div class="acts">' + mvb('l', l.id) + '<button class="weakb" type="button" data-a="lweak" data-v="' + l.id + '" aria-pressed="' + !!l.weak + '">ضعيف</button><button class="del" type="button" data-a="ldel" data-v="' + l.id + '">مسح</button></div></div>';
   });
+  var of = officialFor(sb);
+  if (of) { var have = {}; list.forEach(function (l) { have[l.t] = 1; }); var nn = of.items.filter(function (t) { return !have[t]; }).length;
+    h += '<div class="label">دروس رسمية</div><p class="note">' + esc(of.src) + '. من مكتبة وزارة التربية والتعليم.</p>' + (nn ? '<button class="btn sec" type="button" data-a="loff">حمّل دروس الوزارة (' + ar(nn) + ')</button>' : '<p class="note">كل دروس الوزارة متضافة.</p>'); }
+  else h += '<p class="note">مفيش قايمة دروس رسمية متأكد منها للمادة دي لسه. ضيف دروسك بنفسك.</p>';
   h += '<div class="label">درس جديد</div><div class="custom"><input type="text" id="lesson" placeholder="اسم الدرس" value="' + esc(U.lessonText) + '"><button class="btn sec" type="button" data-a="ladd">ضيف</button></div>' +
     '<div class="label">أو ضيف كذا درس مرة واحدة (هيتسموا درس ١، درس ٢...)</div><div class="custom"><input type="number" id="bulk" inputmode="numeric" min="1" max="100" placeholder="عدد الدروس" value="' + esc(U.bulkN) + '"><button class="btn sec" type="button" data-a="lbulk">ضيف</button></div></section>';
   return h;
@@ -374,7 +392,7 @@ window.addEventListener('focus', function () { if (U.tab === 'more' && U.sub ===
 
 // ===== الضغطات =====
 document.addEventListener('input', function (e) {
-  var ids = { rtime: 'rtime', runtil: 'runtil', mtext: 'mtext', mcount: 'mcount', lesson: 'lessonText', bulk: 'bulkN', note: 'noteText', fbt: 'fbText', btext: 'bkText', pscore: 'pscore', pmax: 'pmax', pdate: 'pdate', todot: 'todoText' };
+  var ids = { rtime: 'rtime', runtil: 'runtil', mtext: 'mtext', mcount: 'mcount', lesson: 'lessonText', bulk: 'bulkN', note: 'noteText', fbt: 'fbText', btext: 'bkText', pscore: 'pscore', pmax: 'pmax', pdate: 'pdate', todot: 'todoText', zdue: 'todoDue', ztime: 'todoTm', edt: 'edT', edm: 'edM', edd: 'edD', edtm: 'edTm' };
   if (ids[e.target.id]) U[ids[e.target.id]] = e.target.value;
   if (e.target.id === 'extra') U.extra = e.target.value;
   if (e.target.id === 'exdate') U.exDate = e.target.value;
@@ -467,7 +485,23 @@ document.addEventListener('click', function (e) {
   else if (a === 'pps') U.psub = v;
   else if (a === 'padd') { var psc = +U.pscore, pmx = +(U.pmax || 100), pdt = U.pdate || dkey(new Date()); if (U.pscore !== '' && psc >= 0 && pmx > 0 && psc <= pmx) { S.papers.push({ id: Date.now(), sub: U.psub, score: psc, max: pmx, date: pdt }); U.pscore = ''; U.msg = ''; save(); } else U.msg = 'اكتب درجة صحيحة (من صفر لحد الدرجة الكاملة).'; }
   else if (a === 'pdel') { S.papers = S.papers.filter(function (p) { return String(p.id) !== v; }); save(); }
-  else if (a === 'zadd') { var zt = U.todoText.trim(); if (zt) { S.todos.push({ id: Date.now(), t: zt, done: false }); U.todoText = ''; save(); } }
+  else if (a === 'zadd') { var zt = U.todoText.trim(); if (zt) { S.todos.push({ id: Date.now(), t: zt, done: false, due: U.todoDue || '', tm: U.todoTm || '', rm: !!(U.todoRem && U.todoDue) }); U.todoText = ''; U.todoDue = ''; U.todoTm = ''; U.todoRem = false; save(); } }
+  else if (a === 'zrem') U.todoRem = !U.todoRem;
+  else if (a === 'loff') { var of2 = officialFor(U.ssub); if (of2) { var ll = (S.lessons[U.ssub] = S.lessons[U.ssub] || []), hv = {}; ll.forEach(function (x) { hv[x.t] = 1; }); of2.items.forEach(function (t, n) { if (!hv[t]) ll.push({ id: Date.now() + n, t: t, done: false }); }); save(); } }
+  else if (a === 'lup' || a === 'ldn') { swapIn(S.lessons[U.ssub] || [], v, a === 'lup' ? -1 : 1); save(); }
+  else if (a === 'tup' || a === 'tdn') { swapIn(S.tasks, v, a === 'tup' ? -1 : 1, function (x, y) { return x.day === y.day; }); save(); }
+  else if (a === 'zup' || a === 'zdn') { swapIn(S.todos, v, a === 'zup' ? -1 : 1, function (x, y) { return !!x.done === !!y.done; }); save(); }
+  else if (a === 'ledit') { lessonsOf(U.ssub).forEach(function (l) { if (String(l.id) === v) { U.ed = { k: 'l', id: v }; U.edT = l.t; } }); }
+  else if (a === 'tedit') { S.tasks.forEach(function (t) { if (String(t.id) === v) { U.ed = { k: 't', id: v }; U.edM = String(t.minutes); } }); }
+  else if (a === 'zedit') { S.todos.forEach(function (x) { if (String(x.id) === v) { U.ed = { k: 'z', id: v }; U.edT = x.t; U.edD = x.due || ''; U.edTm = x.tm || ''; } }); }
+  else if (a === 'ecancel') U.ed = null;
+  else if (a === 'esave') {
+    if (U.ed) { var ek = U.ed.k, ei = String(U.ed.id);
+      if (ek === 'l') { lessonsOf(U.ssub).forEach(function (l) { if (String(l.id) === ei && U.edT.trim()) l.t = U.edT.trim(); }); }
+      else if (ek === 't') { var em = Math.round(+U.edM); S.tasks.forEach(function (t) { if (String(t.id) === ei && em >= 5 && em <= 600) t.minutes = em; }); }
+      else if (ek === 'z') { S.todos.forEach(function (x) { if (String(x.id) === ei) { if (U.edT.trim()) x.t = U.edT.trim(); x.due = U.edD || ''; x.tm = U.edTm || ''; x.rm = !!(U.edD && U.edTm); } }); }
+      U.ed = null; save(); }
+  }
   else if (a === 'zdone') { S.todos.forEach(function (x) { if (String(x.id) === v) x.done = !x.done; }); save(); }
   else if (a === 'zdel') { S.todos = S.todos.filter(function (x) { return String(x.id) !== v; }); save(); }
   else if (a === 'zclear') { S.todos = S.todos.filter(function (x) { return !x.done; }); save(); }
