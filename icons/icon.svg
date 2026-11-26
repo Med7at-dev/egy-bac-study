@@ -1,4 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#f6efe2"/><circle cx="256" cy="256" r="178" fill="none" stroke="#e1d4ba" stroke-width="30"/><path d="M256 78a178 178 0 0 1 168 120" fill="none" stroke="#2f6b5c" stroke-width="30" stroke-linecap="round" transform="rotate(0 256 256)"/><path d="M424 198a178 178 0 0 1-60 216" fill="none" stroke="#d9822b" stroke-width="30" stroke-linecap="round"/>
-<path d="M176 262l52 52 112-120" fill="none" stroke="#1f3a33" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
-<g transform="rotate(35 400 130)"><rect x="372" y="48" width="36" height="120" rx="6" fill="#d9822b"/><path d="M372 168h36l-18 34z" fill="#f4d9a8"/><path d="M382 190h16l-8 12z" fill="#1f3a33"/><rect x="372" y="48" width="36" height="20" rx="6" fill="#2f6b5c"/></g>
-<path d="M120 120l8 20 20 8-20 8-8 20-8-20-20-8 20-8z" fill="#d9822b"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2f5b4e"/><stop offset="1" stop-color="#1a332c"/></linearGradient><linearGradient id="c" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0a35f"/><stop offset="1" stop-color="#b0702f"/></linearGradient></defs>
+<rect width="512" height="512" fill="url(#g)"/>
+<circle cx="256" cy="262" r="168" fill="none" stroke="#f6ecdc" stroke-opacity=".16" stroke-width="30"/>
+<path d="M256 94a168 168 0 0 1 159 113" fill="none" stroke="#f6ecdc" stroke-width="30" stroke-linecap="round"/>
+<path d="M415 207a168 168 0 0 1-58 205" fill="none" stroke="url(#c)" stroke-width="30" stroke-linecap="round"/>
+<path d="M180 270l54 54 108-120" fill="none" stroke="#f6ecdc" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+<g transform="rotate(35 400 130)"><rect x="372" y="48" width="36" height="120" rx="6" fill="url(#c)"/><path d="M372 168h36l-18 34z" fill="#f6ecdc"/><path d="M382 190h16l-8 12z" fill="#1a332c"/><rect x="372" y="48" width="36" height="20" rx="6" fill="#f6ecdc"/></g>
+<path d="M118 128l8 20 20 8-20 8-8 20-8-20-20-8 20-8z" fill="#e0a35f"/></svg>
