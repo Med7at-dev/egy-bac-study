@@ -1,5 +1,8 @@
 # Changelog
 
+## Site update (after 1.2.4)
+- Online version only: anonymous visit statistics with GoatCounter (no cookies, no personal data, private dashboard). The Android app does not use the internet and is not counted.
+
 ## 1.2.4
 - New app icon: check mark in a progress ring with a pencil, in the app's green, copper and cream. Also used for the site icon.
 - Reading comfort in Settings: text size (normal / large / extra large) and a high-contrast switch.

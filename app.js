@@ -365,7 +365,7 @@ function render() {
   h += '</div></header><div class="page ' + (U.anim || '') + '" id="page">';
   if (needSetup) h += '<section class="card lift">' + viewSetup() + '</section>';
   else h += U.tab === 'home' ? viewHome(subs) : U.tab === 'plan' ? viewPlan(subs) : U.tab === 'timer' ? viewTimer(subs) : U.tab === 'syl' ? viewSyl(subs) : U.tab === 'more' ? viewMore(subs) : viewExams(subs);
-  h += '<p class="offline">بيشتغل من غير نت وبياناتك على موبايلك بس.</p><p class="offline">تطوير: Medhat Saaed · © ٢٠٢٦ جميع الحقوق محفوظة</p></div>';
+  h += '<p class="offline">بيشتغل من غير نت وبياناتك على موبايلك بس.</p><p class="offline">النسخة الأونلاين بتعدّ الزيارات بشكل مجهول (رقم بس، من غير كوكيز ولا بيانات شخصية).</p><p class="offline">تطوير: Medhat Saaed · © ٢٠٢٦ جميع الحقوق محفوظة</p></div>';
   if (!needSetup) h += '<nav class="nav" aria-label="التنقل">' + TABS.map(function (x) { return '<button type="button" class="navb" data-a="tab" data-v="' + x[0] + '" aria-current="' + (U.tab === x[0]) + '">' + icon(x[0]) + '<span>' + x[1] + '</span></button>'; }).join('') + '</nav>';
   U.anim = '';
   var y = window.scrollY; app.innerHTML = h; window.scrollTo(0, y);
@@ -582,3 +582,14 @@ window.addEventListener('popstate', function (e) {
 
 render();
 if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); }); }
+// إحصائية زيارات مجهولة (GoatCounter) للنسخة الأونلاين بس. مفيش كوكيز ولا بيانات شخصية. من غير نت بتتجاهل.
+(function () {
+  try {
+    var GC = 'mozakarty';
+    if (location.protocol !== 'https:' || location.hostname !== 'med7at-dev.github.io') return;
+    var sc = document.createElement('script');
+    sc.async = true; sc.src = 'https://gc.zgo.at/count.js'; sc.setAttribute('data-goatcounter', 'https://' + GC + '.goatcounter.com/count');
+    sc.onerror = function () {};
+    document.head.appendChild(sc);
+  } catch (e) {}
+})();
